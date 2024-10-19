@@ -1,0 +1,51 @@
+{
+  "name": "muhammed-aldrubi/exp-imp-management",
+  "description": "description",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Pixel Company",
+      "email": "email@example.com"
+    }
+  ],
+  "require": {
+    "php": "^7.3|^8.0",
+    "laravel/framework": "^8.75",
+    "muhammed-aldrubi/temporary-files-handlers": "^1.0.0",
+    "pixel-softwares/validator-lib": "^1.0.7",
+    "pixel-softwares/custom-file-system": "^1.0.4",
+    "pixel-softwares/file-info-data-manager": "^1.0.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "ExpImpManagement\\": "src/"
+    }
+  },
+    "extra": {
+      "laravel": {
+        "providers": [
+          "ExpImpManagement\\ServiceProviders\\ExpImpManagementServiceProvider"
+        ]
+      }
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "git@github.com:MuhammedALDRUBI/temporary-files-handlers.git"
+    },
+    {
+      "type": "vcs",
+      "url": "git@github.com:Pixel-Softwares-com/validator-lib.git"
+    },
+    {
+      "type": "vcs",
+      "url": "git@github.com:Pixel-Softwares-com/custom-file-system.git"
+    },
+    {
+      "type": "vcs",
+      "url": "git@github.com:Pixel-Softwares-com/file-info-data-manager.git"
+    }
+  ]
+
+}
