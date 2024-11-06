@@ -2,68 +2,61 @@
 
 namespace ExpImpManagement\ExportersManagement\FinalDataArrayProcessors;
 
-use ExpImpManagement\ExportersManagement\FinalDataArrayProcessors\Traits\DataArrayMappingMethodsTrait;
-use ExpImpManagement\ExportersManagement\FinalDataArrayProcessors\Traits\ModelDesiredColumnsValidator;
+use ExpImpManagement\ExportersManagement\FinalDataArrayProcessors\Traits\DataArrayMappingMethodsTrait; 
 use Exception;
+use ExpImpManagement\ExportersManagement\FinalDataArrayProcessors\Traits\ObjectValueHandlers;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
 
-abstract class DataArrayProcessor
+class DataArrayProcessor
 {
-    use DataArrayMappingMethodsTrait , ModelDesiredColumnsValidator ;
+    use DataArrayMappingMethodsTrait , ObjectValueHandlers ;
 
-    protected array $ModelDesiredFinalColumns = [];
+    protected array $ModelDesiredFinalColumns = ['*'];
     protected Collection | LazyCollection | null $DataCollection = null;
 
-    abstract protected function processModelSingleDesiredColumns( string $column  , Model $model ,array $row = []) : array;
-
     /**
-     * @param array $keys
-     * @param Model|Collection|array|null $object
-     * @return array|null
-     * Used To get Associative Array
+     * @param Collection|LazyCollection $DataCollection
+     * @return $this
      */
-    protected function getObjectKeysValues(array $keys ,  Model | Collection | array | null $object = null) : array | null
+    public function setDataCollection(Collection|LazyCollection $DataCollection): self
     {
-        if(!$object ){return null;}
-        if(is_array($object))
-        {
-            /** * @var array $object */
-            return array_intersect_key($object, array_flip($keys));
-        }
-
-        if($object instanceof Model)
-        {
-            /** * @var Model | Collection $object */
-            return $object->only($keys);
-        }
-
-        return $object->map(function ($row) use ( $keys)
-        {
-            return $row->only($keys);
-        })->toArray();
+        $this->DataCollection = $DataCollection;
+        return $this;
     }
 
-    /**
-     * @param string|array $keyName
-     * @param Model|Collection|array|null $object
-     * @return string|null
-     * USed To get String value
-     */
-    protected function getObjectKeyValue(string | array $keyName , Model | Collection | array | null $object) : string | null
+    protected function getModelDesiredColumnOnDataFound() : array
     {
-        if(!$object ){return null;}
-        if($object instanceof Model) { return  $object->{$keyName}; }
-
-        //If Object is An array
-        if(is_array($object)) { return $object[$keyName] ?? null; }
-
-        //If Object Is a Collection
-        return $object->map(function ($row) use ($keyName)
+        $model = $this->getDataCollection()->first();
+        return  $this->getModelOrCollectionAttributesKeysArray($model);
+    }
+    protected function getModelDesiredColumnsIfNoData() : array
+    {
+        return [];
+    }
+   /**
+     * @return DataArrayProcessor|ModelDesiredColumnsValidator
+     */
+    protected function setModelDesiredFinalDefaultColumns( ) : self
+    {
+        if( Arr::first($this->ModelDesiredFinalColumns) == '*')
         {
-            if($row->{$keyName}){return $row->{$keyName};}
-        })->join(" , ");
+            //There Is No Need To Check If DataCollection Has Data Or Not
+            //Because That Always Has Data Items If Execution Arrived at This Point
+            /** @var Model $model */
+            if($this->getCollectionModel()->empty())
+            {
+                //nothing will be selected
+                $this->ModelDesiredFinalColumns = $this->getModelDesiredColumnsIfNoData();
+                return  $this;
+            }
+
+            $this->ModelDesiredFinalColumns = $this->getModelDesiredColumnOnDataFound();
+        }
+
+        return  $this;
     }
 
     /**
@@ -76,6 +69,11 @@ abstract class DataArrayProcessor
         return $this;
     }
 
+    protected function processModelSingleDesiredColumns(string $column , Model $model ,array $row = []) : array
+    {
+        $row[ $column ] =  $this->getObjectKeyValue($column, $model );
+        return $row;
+    }
     /**
      * @param Model $model
      * @param array $row
@@ -90,16 +88,10 @@ abstract class DataArrayProcessor
         return $row;
     }
 
-    /**
-     * @param Collection|LazyCollection $DataCollection
-     * @return $this
-     */
-    public function setDataCollection(Collection|LazyCollection $DataCollection): self
+    protected function processDataRow(Model $model) : array
     {
-        $this->DataCollection = $DataCollection;
-        return $this;
+        return  $this->processModelDesiredColumns($model);
     }
-
     /**
      * @return Collection|LazyCollection|null
      */
@@ -110,17 +102,15 @@ abstract class DataArrayProcessor
 
     protected function DataSetup(Collection | LazyCollection $collection ) : self
     {
-        $this->setDataCollection($collection)
-             ->setModelDesiredFinalDefaultColumns();
-
-        return $this;
+        return $this->setDataCollection($collection)->setModelDesiredFinalDefaultColumns();
     }
+
     /**
      * @param Collection|LazyCollection $collection
-     * @return array
+     * @return Collection
      * @throws Exception
      */
-    public function getProcessedData(Collection | LazyCollection $collection  ): array
+    public function getProcessedData(Collection | LazyCollection $collection  ): Collection
     {
         $this->DataSetup($collection);
 
@@ -128,13 +118,13 @@ abstract class DataArrayProcessor
         foreach ($this->getDataCollection() as $model)
         {
             $row = $this->processDataRow($model);
-            if(!empty($row)){ $finalData[] = $row; }
+            if(!empty($row))
+            {
+                 $finalData[] = $row; 
+            }
         }
-        return $this->callMappingFunOnRowsArray($finalData);
+        $finalData = $this->callMappingFunOnRowsArray($finalData);
+        return collect($finalData);
     }
 
-    protected function processDataRow(Model $model) : array
-    {
-        return  $this->processModelDesiredColumns($model);
-    }
 }

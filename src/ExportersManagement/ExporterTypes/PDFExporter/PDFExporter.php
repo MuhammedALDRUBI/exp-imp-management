@@ -2,25 +2,21 @@
 
 namespace ExpImpManagement\ExportersManagement\ExporterTypes\PDFExporter;
 
-use ExpImpManagement\ExportersManagement\Exporter\Exporter;
-use ExpImpManagement\ExportersManagement\Exporter\ExportersMainTypes\PresentationDataExporter;
+use ExpImpManagement\ExportersManagement\Exporter\Exporter; 
 use ExpImpManagement\ExportersManagement\ExporterTypes\PDFExporter\Responders\PDFStreamingResponder;
 use ExpImpManagement\ExportersManagement\Responders\StreamingResponder;
-use Exception;
-use Mpdf\HTMLParserMode;
-use Mpdf\Mpdf;
+use Exception;  
 use Mpdf\MpdfException;
+use PixelDomPdf\Interfaces\PixelPdfNeedsProvider; 
+use Illuminate\Contracts\View\View;
 
-abstract class PDFExporter extends PresentationDataExporter
-{
-    use TemplateBuildingMethods ;
+/**
+ * @prop PDFStreamingResponder |  $responder
+ */
+abstract class PDFExporter extends Exporter
+{ 
 
-    protected Mpdf $mpdf;
-    protected string $TemplateBladeName;
-
-    public const TABLE_TEMPLATE = "Reports.PDFTemplates.TableTemplate";
-    public const CARD_TEMPLATE = "Reports.PDFTemplates.CardsTemplate";
-
+    protected ?PixelPdfNeedsProvider $pdfLib = null; 
     /**
      * @throws MpdfException
      * @throws Exception
@@ -28,131 +24,51 @@ abstract class PDFExporter extends PresentationDataExporter
     function __construct()
     {
         parent::__construct();
-        $this->initMPDF()->setTemplateBladeName()->setDefaultTitle()->setDefaultAuthor()->setDefaultFooter()
-             ->setDefaultHeaderLine();
+        $this->initPDFLib();
     }
+
+    abstract protected function getViewTemplateRelativePath() : string;
 
     /**
      * @return $this
      */
-    protected function initMPDF() : self
+    protected function initPDFLib() : self
     {
-        $this->mpdf = new Mpdf();
+        $this->pdfLib = app()->make(PixelPdfNeedsProvider::class);
         return $this;
     }
-
-    protected function setTemplateBladeName() : self
-    {
-        $this->TemplateBladeName = PDFExporter::TABLE_TEMPLATE;
-        return $this;
-    }
-
+  
     /**
-     * @param string $style
-     * @return $this
-     * @throws Exception
+     * Handle the data collection as you want in the view 
      */
-    public function setCustomStyle(string $style = "") : self
+    protected function getViewToRender() : View
     {
-        if($style == ""){throw new Exception("PDF Exported File's Style Can't Be Empty String !");}
-        $this->mpdf->WriteHTML($style,  HTMLParserMode::HEADER_CSS);
+        return view($this->getViewTemplateRelativePath() , $this->DataCollection);
+    }
+    
+    protected function passViewToPDFLib() : self
+    {
+        $this->pdfLib->loadView($this->getViewToRender());
         return $this;
     }
-
+    
     /**
      * @return $this
+     * @throws JsonException
+     * 
+     * this method allows the child classes to do somthings after setting DataCollection
      */
-    protected function setDefaultTitle() :self
+    protected function PrepareExporterData() : self
     {
-        $this->mpdf->SetTitle($this->getDocumentTitle());
-        return $this;
-    }
-
-    /**
-     * @return $this
-     * @throws Exception
-     */
-    public function setCustomTitle(string $title = "") :self
-    {
-        if($title == ""){throw new Exception("PDF Exported File's Title Can't Be Empty String !");}
-        $this->mpdf->SetTitle($title);
-        return $this;
-    }
-
-    protected function setDefaultAuthor() : self
-    {
-        $this->mpdf->SetAuthor('IGS Management System');
-        return $this;
-    }
-
-    /**
-     * @param string $author
-     * @return $this
-     * @throws Exception
-     */
-    public function setCustomAuthor(string $author = "") : self
-    {
-        if($author == ""){throw new Exception("PDF Exported File's Author Can't Be Empty String !");}
-        $this->mpdf->SetAuthor($author);
-        return $this;
-    }
-
-    /**
-     * @return $this
-     */
-    protected function setDefaultFooter() : self
-    {
-        $this->mpdf->setFooter('Document Title|{DATE F j, Y}|{PAGENO}');
-        return $this;
-    }
-
-    /**
-     * @param string $footer
-     * @return $this
-     * @throws Exception
-     */
-    public function setCustomFooter(string $footer = "") : self
-    {
-        if($footer == ""){throw new Exception("PDF Exported File's Footer Can't Be Empty String !");}
-        $this->mpdf->setFooter($footer);
-        return $this;
-    }
-
-    /**
-     * @return $this
-     */
-    protected function setDefaultHeaderLine() : self
-    {
-        $this->mpdf->defaultheaderline = false;
-        return $this;
-    }
-
-    /**
-     * @return $this
-     */
-    public function setCustomDefaultHeaderLine(bool $DefaultHeaderLineStatus = false) : self
-    {
-        $this->mpdf->defaultheaderline = $DefaultHeaderLineStatus;
-        return $this;
+        parent::PrepareExporterData();
+        return $this->passViewToPDFLib();
     }
 
     protected function getStreamingResponder(): StreamingResponder
-    {
-        return new PDFStreamingResponder();
+    { 
+        return new PDFStreamingResponder($this->pdfLib  );
     }
-
-    /**
-     * @return Exporter
-     * @throws MpdfException
-     */
-    protected function setStreamingResponderResponseProps() : Exporter
-    {
-        $this->buildTemplate();
-        /** @var PDFStreamingResponder $this->responder */
-        $this->responder->setMPDF($this->mpdf);
-        return $this;
-    }
-
+  
     protected function getDataFileExtension() : string
     {
         return "pdf";
@@ -165,10 +81,8 @@ abstract class PDFExporter extends PresentationDataExporter
      */
     protected function setDataFileToExportedFilesProcessor() : string
     {
-        return $this->filesProcessor->HandleTempFileContentToCopy(
-                    $this->mpdf->output($this->fileFullName , "S"),
-                    $this->fileFullName
-                )->copyToTempPath();
+        return $this->filesProcessor->HandleTempFileContentToCopy( $this->pdfLib->output() , $this->fileFullName )
+                                    ->copyToTempPath();
     }
 
 }

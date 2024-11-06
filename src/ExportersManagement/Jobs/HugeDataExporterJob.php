@@ -36,9 +36,7 @@ class HugeDataExporterJob implements ShouldQueue
      */
     public function __construct(string $ExporterClass , Request $request )
     {
-        $this->RequestQueryStringArray = $request->query->all();
-        $this->RequestPostData = $request->all();
-        $this->setExporterClass($ExporterClass)->setNotifiable();
+        $this->setExporterClass($ExporterClass)->keepRequestParams($request)->setNotifiable();
     }
 
     public function setDataCollection(Collection | LazyCollection | null $collection) : self
@@ -52,6 +50,12 @@ class HugeDataExporterJob implements ShouldQueue
         return $request->merge([ ...$this->RequestPostData , ...$this->RequestQueryStringArray] );
     }
 
+    protected function keepRequestParams(Request $request) :self
+    { 
+        $this->RequestQueryStringArray = $request->query->all();
+        $this->RequestPostData = $request->all();
+        return $this;
+    }
     /**
      * @param string $ExporterClass
      * @return $this
@@ -59,10 +63,10 @@ class HugeDataExporterJob implements ShouldQueue
      */
     private function setExporterClass(string $ExporterClass) : self
     {
-        if(!class_exists($ExporterClass)){throw new Exception("The Given Exporter Class Is Not Defined !");}
-
-        $exporter = new $ExporterClass();
-        if(!$exporter instanceof Exporter){throw new Exception("The Given Exporter Class Is Not Valid Exporter Class !");}
+        if(!is_subclass_of($ExporterClass , Exporter::class))
+        {
+            throw new Exception("The Given Exporter Class Is Not Valid Exporter Class !");
+        } 
         $this->ExporterClass = $ExporterClass ;
 
         return $this;
@@ -70,12 +74,7 @@ class HugeDataExporterJob implements ShouldQueue
 
     private function setNotifiable() : self
     {
-        /**
-         * @todo later 
-         * it is not the first user ... it was only for test ... must notify the logged user
-         */
-        $this->notifiable = User::offset(1)->take(1)->get()->first(); 
-            //auth("api")->user();
+        $this->notifiable =  auth("api")->user();
         return $this;
     }
 
@@ -99,8 +98,8 @@ class HugeDataExporterJob implements ShouldQueue
     public function handle(Request $request) : void
     {
         $this->setExporter();
-        $this->exporter->setCustomRequest( $this->updateRequest($request) );
-        if($this->DataCollection != null) {$this->exporter->setCustomDataCollection($this->DataCollection);}
+        $this->exporter->useRequest( $this->updateRequest($request) );
+        $this->exporter->useDataCollection($this->DataCollection);
         $ExportedDataDownloadingPath = $this->exporter->exportingJobFun();
         $this->NotifyExportedData($ExportedDataDownloadingPath);
     }

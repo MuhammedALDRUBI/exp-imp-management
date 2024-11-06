@@ -6,9 +6,7 @@ use ExpImpManagement\ExportersManagement\FinalDataArrayProcessors\DataArrayProce
 use Exception;
 
 trait DataArrayMappingMethodsTrait
-{
-
-
+{ 
     /** * @var callable $FinalDataArrayMappingFun */
     protected  $FinalDataArrayMappingFun = null;
 
@@ -29,7 +27,7 @@ trait DataArrayMappingMethodsTrait
      */
     protected function callMappingFunOnRowsArray(array $rows) : array
     {
-        if($this->FinalDataArrayMappingFun == null){return $rows;}
+        if(!$this->FinalDataArrayMappingFun){return $rows;}
         $this->checkMappingFunValidity($rows[0]);
 
         //If No Exception Is Thrown .... The Mapping Function Will Be Applied On The Final Data Array

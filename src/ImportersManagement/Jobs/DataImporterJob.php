@@ -36,7 +36,9 @@ class DataImporterJob implements ShouldQueue
      */
     public function handle(Request $request)
     {
-        $this->initImporter()->informToDeleteImportedDataFileAfterProcessing($this->DeleteImportedDataFileAfterProcessing)->importingJobFun();
+        $this->initImporter()
+             ->setImportedDataFileAfterProcessingDeletingStatus($this->ImportedDataFileAfterProcessingDeletingStatus)
+             ->importingJobFun();
         $this->SuccessfullyImportingDataNotifier();
     }
 }

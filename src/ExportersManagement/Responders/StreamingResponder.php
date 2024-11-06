@@ -4,8 +4,7 @@ namespace ExpImpManagement\ExportersManagement\Responders;
 
 abstract class StreamingResponder extends Responder
 {
-
-    protected  array $DataToExport = [];
+ 
     protected string $FileFullName ;
 
     /**
@@ -17,14 +16,5 @@ abstract class StreamingResponder extends Responder
         $this->FileFullName = $FileFullName;
         return $this;
     }
-
-    /**
-     * @param array $DataToExport
-     * @return $this
-     */
-    public function setDataToExport(array $DataToExport): self
-    {
-        $this->DataToExport = $DataToExport;
-        return $this;
-    }
+ 
 }

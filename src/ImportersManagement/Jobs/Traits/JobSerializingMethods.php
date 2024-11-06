@@ -4,16 +4,15 @@ namespace ExpImpManagement\ImportersManagement\Jobs\Traits;
 
 use ExpImpManagement\ImportersManagement\Importer\Importer;
 use ExpImpManagement\ImportersManagement\Jobs\DataImporterJob;
-use Exception;
-use App\Models\User;
+use Exception; 
 use Illuminate\Contracts\Auth\Authenticatable;
 
 trait JobSerializingMethods
 {
     private string $importerClass;
-    protected string $importedDataFileStoragePath = "";
-    protected bool $DeleteImportedDataFileAfterProcessing = false;
-    private Authenticatable | User $notifiable;
+    protected string $importedDataFileStoragePath = ""; 
+    protected bool $ImportedDataFileAfterProcessingDeletingStatus = false;
+    private Authenticatable $notifiable;
 
     /**
      * @param string $importedDataFileStoragePath
@@ -25,15 +24,18 @@ trait JobSerializingMethods
         return $this;
     }
 
+   
     /**
-     * @param bool $DeleteImportedDataFileAfterProcessing
-     * @return DataImporterJob
+     * @param bool $status
+     * @return $this
+     * @throws Exception
      */
-    public function informToDeleteImportedDataFileAfterProcessing(bool $DeleteImportedDataFileAfterProcessing): DataImporterJob
+    public function setImportedDataFileAfterProcessingDeletingStatus(bool $status): self
     {
-        $this->DeleteImportedDataFileAfterProcessing = $DeleteImportedDataFileAfterProcessing;
+        $this->ImportedDataFileAfterProcessingDeletingStatus = $status;
         return $this;
     }
+
 
     /**
      * @param string $importerClass
@@ -42,11 +44,12 @@ trait JobSerializingMethods
      */
     private function setImporterClass(string $importerClass) : DataImporterJob
     {
-        if(!class_exists($importerClass)){throw new Exception("The Given Importer Class Is Not Defined !");}
-
-        $importer = new $importerClass();
-        if(!$importer instanceof Importer){throw new Exception("The Given Importer Class Is Not Valid Importer Class !");}
-        $this->importerClass = $importerClass ;
+        if(!is_subclass_of($importerClass , Importer::class))
+        {
+            throw new Exception("The Given Importer Class Is Not Valid Importer Class !");
+        }
+        
+        $this->importerClass = new $importerClass();;
 
         return $this;
     }
@@ -54,12 +57,7 @@ trait JobSerializingMethods
 
     private function setNotifiable() : self
     {
-
-        /**
-         * need to get logged user .... not me
-         */
-        $this->notifiable = User::where("email" , "aldroubim7@gmail.com")->first();
-//        $this->notifiable = auth("api")->user();
+        $this->notifiable = auth("api")->user();
         return $this;
     }
 }

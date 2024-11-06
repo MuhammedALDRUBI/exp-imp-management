@@ -13,9 +13,14 @@
     "php": "^7.3|^8.0",
     "laravel/framework": "^8.75",
     "muhammed-aldrubi/temporary-files-handlers": "^1.0.0",
-    "pixel-softwares/validator-lib": "^1.0.7",
+    "muhammed-aldrubi/pixel-dom-pdf": "^1.0.5",
+    "maatwebsite/excel": "^3.1",
+    "rap2hpoutre/fast-excel": "^5.1",
     "pixel-softwares/custom-file-system": "^1.0.4",
-    "pixel-softwares/file-info-data-manager": "^1.0.1"
+    "pixel-softwares/file-info-data-manager": "^1.0.1",
+    "spatie/laravel-query-builder": "4.0",
+    "pixel-softwares/crud-services": "^1.0.15",  
+    "pixel-softwares/validator-lib": "^1.0.7"
   },
   "autoload": {
     "psr-4": {
@@ -40,11 +45,23 @@
     },
     {
       "type": "vcs",
+      "url": "git@github.com:Pixel-Softwares-com/authorization-management.git"
+    },
+    {
+      "type": "vcs",
+      "url": "git@github.com:Pixel-Softwares-com/crud-services.git"
+    },
+    {
+      "type": "vcs",
       "url": "git@github.com:Pixel-Softwares-com/custom-file-system.git"
     },
     {
       "type": "vcs",
       "url": "git@github.com:Pixel-Softwares-com/file-info-data-manager.git"
+    },
+    {
+        "type": "vcs",
+        "url": "git@github.com:MuhammedALDRUBI/pixel-dom-pdf.git"
     }
   ]
 

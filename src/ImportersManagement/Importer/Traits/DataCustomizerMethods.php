@@ -2,7 +2,7 @@
 
 namespace ExpImpManagement\ImportersManagement\Importer\Traits;
 
-use ExpImpManagement\ImportersManagement\Importer\DataFilesContentProcessors\DataFileContentProcessor;
+use ExpImpManagement\ImportersManagement\DataFilesContentProcessors\DataFileContentProcessor;
 use ExpImpManagement\ImportersManagement\Importer\Importer;
 use ExpImpManagement\ImportersManagement\Interfaces\CareAboutDateTruth;
 use Exception;
@@ -20,12 +20,15 @@ trait DataCustomizerMethods
     protected function setDataFileContentProcessorProps() : DataFileContentProcessor
     {
         return $this->dataFileContentProcessor->setFilesProcessor($this->filesProcessor)
-                                              ->setFilePathToProcess($this->getDataFilePath());
+                                              ->setFilePathToProcess($this->uploadedFileTempRealPath);
     }
 
     protected function initDataFileContentProcessor() : DataFileContentProcessor
     {
-        if(!$this->dataFileContentProcessor){$this->dataFileContentProcessor = $this->getDataFileContentProcessor();}
+        if(!$this->dataFileContentProcessor)
+        {
+            $this->dataFileContentProcessor = $this->getDataFileContentProcessor();
+        }
         return $this->setDataFileContentProcessorProps();
     }
 
@@ -33,16 +36,7 @@ trait DataCustomizerMethods
     {
         return $this->initDataFileContentProcessor()->getData();
     }
-
-    /**
-     * @return void
-     * @throws Exception
-     */
-    protected function throwEmptyDataException() : void
-    {
-        throw new Exception("There Is No Data To Import");
-    }
-
+  
     protected function setModelDateColumns(array $columns) : array
     {
         if($this instanceof CareAboutDateTruth)
@@ -54,7 +48,7 @@ trait DataCustomizerMethods
 
     protected function getModelDBTable() : string
     {
-        return app($this->getModelClass())->getTable();
+        return $this->initNewModel()->getTable();
     }
     /**
      * Override It When It Is Needed In Child Class
@@ -86,14 +80,28 @@ trait DataCustomizerMethods
         return $columnsValues;
     }
 
+    protected function setModelClass() : self
+    {
+        $modelClass = $this->getModelClass() ;
+        if(! is_subclass_of($modelClass , Model::class))
+        {
+            throw new Exception("Invald model class is provided !");
+        }
+        $this->ModelClass = $modelClass;
+        return $this;
+    }
+
+    protected function initNewModel() : Model
+    {
+        return app()->make($this->ModelClass);
+    }
+    
     protected function importModel(array $row) : Model
     {
-        $Model = app($this->getModelClass());
-        foreach ($row as $column => $value)
-        {
-            $Model->{$column} = $value;
-        }
-        return $Model;
+        $Model = $this->initNewModel();
+        $Model->forceFill($row);
+        $Model->save();
+        return $Model; 
     }
 
     /**
@@ -103,26 +111,41 @@ trait DataCustomizerMethods
      */
     protected function importDataRow(array $row) : Model | null
     {
-        $this->validateDataRow($row);
-        if($this->getModelDesiredColumnValues($row))
+        /**
+         * Need to handle exception notification
+         */
+        $this->validateSingleModel($row);
+
+        $fillable = $this->getModelDesiredColumnValues($row);
+        if(!empty($fillable))
         {
-            return $this->importModel($row);
+            return $this->importModel($fillable);
         }
+         /**
+         * Need to handle exception notification
+         */
         return null;
     }
 
+    protected function importDataRows(array $row) : void
+    {
+        foreach ($this->ImportedDataArray as $row)
+        {
+            $this->importDataRow($row);
+        }
+    }
 
     /**
      * @throws Exception
      */
     protected function importData() : Importer
     {
-        DB::beginTransaction();
-        $this->setModelDesiredColumns();
-        foreach ($this->ImportedDataArray as $row)
-        {
-            $this->importDataRow($row);
-        }
+        /**
+         * Need to handle exception notification
+         */
+        $this->validateDataGenerally();
+        $this->startImportingDBTransaction();
+        $this->setModelDesiredColumns(); 
         return $this;
     }
 

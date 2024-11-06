@@ -18,35 +18,24 @@ abstract class Importer
 {
 
     use ValidationMethods , UploadedFileOperations , DataCustomizerMethods ,
-        ResponderMethods , ImporterAbstractMethods  , FilesImportingMethods;
+        ResponderMethods , ImporterAbstractMethods  ;
 
     const ImportedUploadedFilesTempFolderName =  "ImportedDataTempFiles";
-    protected string $ExtractedUploadedFileTempRealPath; /** Folder Contains Data File and Files Must Be Imported */
+    protected string $uploadedFileTempRealPath;  //temp file real path (not in storage ... it is in the temp path for manipulating and deleting after process is done)
     protected array $ImportedDataArray = [];
+    protected ?string $ModelClass = null;
 
     protected ?TemporaryFilesProcessor $filesProcessor = null;
 
     protected function initFileProcessor() : Importer
     {
-        if(!$this->filesProcessor){ $this->filesProcessor = new TemporaryFilesProcessor(); }
+        if(!$this->filesProcessor)
+        {
+             $this->filesProcessor = new TemporaryFilesProcessor(); 
+        }
         return $this;
     }
-
-    /**
-     * Will Be Overridden In Child Classes (Based On Type)
-     * @return string
-     */
-    protected function getDataFileExpectedExtension(): string
-    {
-        return "csv";
-    }
-
-    protected function getDataFilePath() : string
-    {
-        return $this->ExtractedUploadedFileTempRealPath . "/"
-            . $this->filesProcessor->getFileDefaultName($this->ExtractedUploadedFileTempRealPath , "" , false)
-            . "." . $this->getDataFileExpectedExtension();
-    }
+ 
     /**
      * @return $this
      * @throws Exception
@@ -54,8 +43,7 @@ abstract class Importer
     protected function setFileDataArray() : self
     {
         $this->openImportedDataFileForProcessing();
-        $this->ImportedDataArray = $this->getDataToImport();
-        if(empty($this->ImportedDataArray)){$this->throwEmptyDataException() ;}
+        $this->ImportedDataArray = $this->getDataToImport(); 
         return $this;
     }
 
@@ -65,19 +53,23 @@ abstract class Importer
      */
     protected function fetchFileData() : Importer
     {
-        return $this->setFileDataArray()->validateFileData();
+        return $this->setFileDataArray();
     }
 
-    protected function successfulImporting() : Importer
+    protected function successfulImportingTransaction() : Importer
     {
         DB::commit();
         return $this->deleteTempUploadedFile();
     }
 
-    protected function failedImporting() : Importer
+    protected function failedImportingTransactrion() : Importer
     {
         DB::rollBack();
-        return $this->deleteImportedFiles();
+        return $this;
+    }
+    protected function startImportingDBTransaction() : void
+    {
+        DB::beginTransaction();
     }
 
     /**
@@ -86,16 +78,16 @@ abstract class Importer
     public function importingJobFun() : void
     {
         try {
-            $this->setupImporter()->fetchFileData()->importData()->importFiles();
-            $this->successfulImporting();
+            $this->setupImporter()->fetchFileData()->importData();
+            $this->successfulImportingTransaction();
         }catch (Exception $e)
         {
-            $this->failedImporting();
+            $this->failedImportingTransactrion();
         }
     }
     protected function setupImporter() : Importer
     {
-        return $this->initFileProcessor();
+        return $this->initFileProcessor()->setModelClass()->setValidationManger();
     }
 
     /**
@@ -106,7 +98,7 @@ abstract class Importer
     {
         try{
             $this->setupImporter()->HandleUploadedFile();
-            return $this->initResponder()->informDeleteToImportedDataFileAfterProcessing($this->DeleteUploadedFileAfterProcessing)->respond();
+            return $this->initResponder()->respond();
         }catch(Exception $e)
         {
             return Response::error([$e->getMessage()]);

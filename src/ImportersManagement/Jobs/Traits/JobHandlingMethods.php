@@ -26,7 +26,10 @@ trait JobHandlingMethods
      */
     private function initImporter() : Importer
     {
-        if(!$this->importer){$this->importer = new $this->importerClass;}
+        if(!$this->importer)
+        {
+            $this->importer = new $this->importerClass;
+        }
         return $this->setImporterProps();
     }
 

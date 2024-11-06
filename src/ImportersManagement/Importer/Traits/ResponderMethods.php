@@ -19,17 +19,25 @@ trait ResponderMethods
     /**
      * @throws JsonException
      */
-    protected function setResponderProps() : Responder
+    protected function setResponderProps(JobDispatcherJSONResponder $responder) : void
     {
-        return $this->responder->setImporterClass($this)
-                               ->setImportedDataFileStoragePath($this->uploadedFileStorageRelevantPath );
+        $responder->setImporterClass($this)
+                  ->setImportedDataFileStoragePath($this->uploadedFileStorageRelevantPath )
+                  ->setImportedDataFileAfterProcessingDeletingStatus( $this->ImportedDataFileAfterProcessingDeletingStatus );
     }
     /**
      * @throws Exception
      */
     protected function initResponder() : Responder
     {
-        if(!$this->responder){$this->responder = $this->getJobDispatcherResponder();}
-        return $this->setResponderProps();
+        if(!$this->responder)
+        {
+            $responder = $this->getJobDispatcherResponder();
+
+            $this->setResponderProps($responder);
+
+            $this->responder = $responder;
+        }
+        return $this->responder;
     }
 }

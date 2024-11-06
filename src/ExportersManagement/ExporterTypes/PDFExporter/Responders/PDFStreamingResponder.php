@@ -3,25 +3,20 @@
 namespace ExpImpManagement\ExportersManagement\ExporterTypes\PDFExporter\Responders;
 
 use ExpImpManagement\ExportersManagement\Responders\StreamingResponder;
-use Illuminate\Http\JsonResponse;
-use Mpdf\Mpdf;
+use Illuminate\Http\JsonResponse; 
 use Mpdf\MpdfException;
+use PixelDomPdf\Interfaces\PixelPdfNeedsProvider;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PDFStreamingResponder extends StreamingResponder
 {
-    protected MPDF $mpdf;
+    protected ?PixelPdfNeedsProvider $PDFLib = null;  
 
-    /**
-     * @param Mpdf $MPDF
-     * @return $this
-     */
-    public function setMPDF(Mpdf $MPDF): self
+    public function __construct(PixelPdfNeedsProvider $PDFLib )
     {
-        $this->mpdf = $MPDF;
-        return $this;
-    }
+        $this->PDFLib = $PDFLib ;  
+    } 
 
     /**
      * @return BinaryFileResponse|StreamedResponse|JsonResponse|string
@@ -29,6 +24,6 @@ class PDFStreamingResponder extends StreamingResponder
      */
     public function respond():BinaryFileResponse | StreamedResponse | JsonResponse| string
     {
-        return $this->mpdf->Output($this->FileFullName, 'D');
+        return $this->PDFLib->stream( $this->FileFullName );
     }
 }

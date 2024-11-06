@@ -12,38 +12,18 @@ use Exception;
 use Illuminate\Http\UploadedFile;
 
 trait UploadedFileOperations
-{
-    protected ?ExportedDataFilesInfoManager     $exportedDataFilesInfoManager = null;
+{ 
     protected ?CustomFileDeleter $customFileDeleter = null;
-    protected ?ImportableDataFilesInfoManager   $importableDataFilesInfoManager = null;
-    protected ?TemporaryFilesCompressor         $filesCompressor = null;
+    protected ?ImportableDataFilesInfoManager   $importableDataFilesInfoManager = null; 
 
 
     protected ?UploadedFile $uploadedFile = null;
     protected string        $uploadedFileStorageRelevantPath = "";
-    protected string        $UploadedFileFullName = "";
-    protected string        $uploadedFilePassword = "";
-    protected bool          $DeleteUploadedFileAfterProcessing = false;
+    protected string        $UploadedFileFullName = ""; 
 
-    /**
-     * @param UploadedFile $uploadedFile
-     * @return Importer
-     */
-    public function setUploadedFile(UploadedFile $uploadedFile): Importer
-    {
-        $this->uploadedFile = $uploadedFile;
-        return $this;
-    }
-
-    /**
-     * @return ExportedDataFilesInfoManager
-     */
-    protected function initExportedDataFilesInfoManager() : ExportedDataFilesInfoManager
-    {
-        if(!$this->exportedDataFilesInfoManager){$this->exportedDataFilesInfoManager = new ExportedDataFilesInfoManager();}
-        return $this->exportedDataFilesInfoManager;
-    }
-
+    //this prop will be kept to be passed by the job into the importer at background
+    protected bool $ImportedDataFileAfterProcessingDeletingStatus = false;
+ 
     /**
      * @return ImportableDataFilesInfoManager
      */
@@ -52,18 +32,7 @@ trait UploadedFileOperations
         if(!$this->importableDataFilesInfoManager){$this->importableDataFilesInfoManager = new ImportableDataFilesInfoManager();}
         return $this->importableDataFilesInfoManager;
     }
-
-    /**
-     * @return Importer
-     * @throws Exception
-     */
-    protected function setUploadedFilePassword() : Importer
-    {
-        if(!$this->UploadedFileFullName){throw new Exception("The UploadedFile Full Name Is Not Set ... Failed To get The Password Needed To Process The File !");}
-        $this->uploadedFilePassword = $this->initImportableDataFilesInfoManager()->getFilePassword($this->UploadedFileFullName);
-        return $this;
-    }
-
+ 
     /**
      * @param string $UploadedFileFullName
      * @return string
@@ -75,34 +44,19 @@ trait UploadedFileOperations
         return $this->filesProcessor->uploadToStorage(
                                         $this->uploadedFile->getRealPath() ,
                                         $UploadedFileFullName ,
-                                        static::ImportedUploadedFilesTempFolderName
+                                        Importer::ImportedUploadedFilesTempFolderName
                                     );
-    }
-
-    /**
-     * @param string $UploadedFileFullName
-     * @return string
-     */
-    protected function getNewlyExportedFileRelevantPath(string $UploadedFileFullName) : string
-    {
-        return $this->initExportedDataFilesInfoManager()->getFileRelevantPath($UploadedFileFullName);
-    }
-
+    } 
 
     /**
      * @return string
      * @throws JsonException
      * @throws JsonException
      * @throws Exception
+     * The Uploaded File Will Be Uploaded To Storage Temp Path To Process It Later , Then Deleting It After Processing
      */
     protected function getUploadedFileStorageRelevantPath() : string
-    {
-        /** If File Is Newly Exported ... No Need To Upload The Same File Again ... We Will Get The Relevant Path Of Exported File By This Method*/
-        $fileStorageRelevantPath = $this->getNewlyExportedFileRelevantPath($this->UploadedFileFullName);
-        if($fileStorageRelevantPath) { return $fileStorageRelevantPath;}
-
-
-        /** Else ... The Uploaded File Will Be Uploaded To Storage Temp Path To Process It Later , Then Deleting It After Processing*/
+    {   
         return $this->uploadToImportedFilesTempStorage($this->UploadedFileFullName);
     }
 
@@ -113,14 +67,22 @@ trait UploadedFileOperations
      */
     public function setUploadedFileStorageRelevantPath(string $uploadedFileStorageRelevantPath = "" ): Importer
     {
-        if(!$uploadedFileStorageRelevantPath){ $uploadedFileStorageRelevantPath = $this->getUploadedFileStorageRelevantPath(); }
+        if(!$uploadedFileStorageRelevantPath)
+        {
+             $uploadedFileStorageRelevantPath = $this->getUploadedFileStorageRelevantPath(); 
+        }
         $this->uploadedFileStorageRelevantPath = $uploadedFileStorageRelevantPath;
         return $this;
     }
 
-    public function informToDeleteImportedDataFileAfterProcessing(bool $DeleteImportedDataFileAfterProcessing) : Importer
+   /**
+     * @param bool $status
+     * @return $this
+     * @throws Exception
+     */
+    public function setImportedDataFileAfterProcessingDeletingStatus(bool $status): self
     {
-        $this->DeleteUploadedFileAfterProcessing = $DeleteImportedDataFileAfterProcessing;
+        $this->ImportedDataFileAfterProcessingDeletingStatus = $status;
         return $this;
     }
 
@@ -131,44 +93,39 @@ trait UploadedFileOperations
         return $this;
     }
 
+    
+    /**
+     * @return Importer
+     */
+    protected function setUploadedFile(): Importer
+    {
+        $this->uploadedFile = $this->getValidUploadedFile();
+        return $this;
+    }
+
+
     /**
      * @return Importer
      * @throws Exception
      */
     protected function HandleUploadedFile() : Importer
     {
-        if(!$this->uploadedFile){throw new Exception("There Is No Uploaded File To Import Its Data !");}
-        return  $this->setUploadedFileFullName()->setUploadedFileStorageRelevantPath()->setUploadedFilePassword();
+        return $this->validateUploadedFile()->setUploadedFile()->setUploadedFileFullName()->setUploadedFileStorageRelevantPath() ; 
     }
 
-    protected function initFilesCompressor() : TemporaryFilesCompressor
-    {
-        if(!$this->filesCompressor){$this->filesCompressor = new TemporaryFilesCompressor();}
-        return $this->filesCompressor;
-    }
-
-    /**
-     * @param string $compressedFileTempPath
-     * @return string
-     * @throws Exception
-     */
-    protected function ExtractCompressedUploadedFile(string $compressedFileTempPath) : string
-    {
-         return $this->initFilesCompressor()->setZipPassword($this->uploadedFilePassword)->extractTo($compressedFileTempPath);
-    }
-
+   
     /**
      * @return Importer
      * @throws Exception
      */
-    protected function checkUploadedFileStorageRelevantPath() : Importer
+    protected function checkUploadedFileStorageRelevantPath() : void
     {
-        if($this->uploadedFileStorageRelevantPath != ""){return $this;}
-        throw new Exception("There Is No Uploaded File Storage Relevant Path's Value , Can't Access To Imported Data File To Complete Operation !");
+        if(!$this->uploadedFileStorageRelevantPath)
+        {
+            throw new Exception("There Is No Uploaded File Storage Relevant Path's Value , Can't Access To Imported Data File To Complete Operation !");
+        }
     }
-
-
-
+ 
     /**
      * @return Importer
      * @throws JsonException
@@ -178,9 +135,9 @@ trait UploadedFileOperations
     {
         $this->checkUploadedFileStorageRelevantPath();
 
-        /**  Copying Data File From Storage To Tem Files Folder .... And Set Copied New Path To  ImportedFileTempRealPath Prop */
+        /**  Copying Data File From Storage To Tem Files Folder .... And Set New Copy To ImportedFileTempRealPath temp folder */
         $tempFilesPath = $this->filesProcessor->addTempFileToCopy( $this->uploadedFileStorageRelevantPath)->copyToTempPath();
-        $this->ExtractedUploadedFileTempRealPath = $this->ExtractCompressedUploadedFile($tempFilesPath  .  $this->UploadedFileFullName);
+        $this->uploadedFileTempRealPath =  rtrim($tempFilesPath ,"/") . "/"  .  $this->UploadedFileFullName ;
         return $this;
     }
 
@@ -193,6 +150,9 @@ trait UploadedFileOperations
 
     protected function deleteTempUploadedFile() : self
     {
+        /**
+         * Need to determine what will happen for the uploadedFile in the storage path 
+         */
         $this->initCustomFileDeleter()->deleteFileIfExists($this->uploadedFileStorageRelevantPath);
         return $this;
     }

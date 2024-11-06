@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Response;
 
 class JobDispatcherJSONResponder  extends Responder
 {
-    protected string $importerClass = "";
+    protected ?string $importerClass = null;
+    protected ?string $importedDataFileStoragePath = null;
+    protected bool $ImportedDataFileAfterProcessingDeletingStatus = false;
     protected ?DataImporterJob $job = null;
 
     /**
@@ -20,20 +22,28 @@ class JobDispatcherJSONResponder  extends Responder
     protected function initJob() : self
     {
         if($this->job){return $this;}
-        if(!$this->importerClass){throw new Exception("There Is No Importer Class Given To Job Object");}
+        if(!$this->importerClass)
+        {
+            throw new Exception("There Is No Importer Class Given To Job Object");
+        }
+
+        if(!$this->importedDataFileStoragePath)
+        {
+             throw new Exception("The Imported File Path Is Not Passed To JobDispatcherJSONResponder");
+        }
+
         $this->job = new DataImporterJob($this->importerClass );
         return $this;
     }
 
     /**
-     * @param Importer $importerClass
+     * @param Importer $importer
      * @return $this
      * @throws Exception
      */
-    public function setImporterClass(Importer $importerClass): self
+    public function setImporterClass(Importer $importer): self
     {
-        $this->importerClass = get_class($importerClass);
-        $this->initJob();
+        $this->importerClass = get_class($importer); 
         return $this;
     }
 
@@ -44,20 +54,18 @@ class JobDispatcherJSONResponder  extends Responder
      */
     public function setImportedDataFileStoragePath(string $importedDataFileStoragePath  ): self
     {
-        $this->initJob();
-        $this->job->setImportedDataFileStoragePath($importedDataFileStoragePath);
+        $this->importedDataFileStoragePath = $importedDataFileStoragePath;
         return $this;
     }
 
     /**
-     * @param bool $DeleteImportedDataFileAfterProcessing
+     * @param bool $status
      * @return $this
      * @throws Exception
      */
-    public function informDeleteToImportedDataFileAfterProcessing(bool $DeleteImportedDataFileAfterProcessing): self
+    public function setImportedDataFileAfterProcessingDeletingStatus(bool $status): self
     {
-        $this->initJob();
-        $this->job->informToDeleteImportedDataFileAfterProcessing($DeleteImportedDataFileAfterProcessing);
+        $this->ImportedDataFileAfterProcessingDeletingStatus = $status;
         return $this;
     }
 
@@ -66,6 +74,9 @@ class JobDispatcherJSONResponder  extends Responder
      */
     public function respond(): JsonResponse
     {
+        
+        $this->initJob();
+        $this->job->setImportedDataFileAfterProcessingDeletingStatus($DeleteImportedDataFileAfterProcessing);
         dispatch($this->job);
         return Response::success([] , ["Your Data File Has Been Uploaded Successfully ! , You Will Receive Your Request Result By Mail Message On Your Email !"]);
     }

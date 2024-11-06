@@ -5,63 +5,27 @@ namespace ExpImpManagement\ExportersManagement\Exporter\Traits;
 
 use ExpImpManagement\ExportersManagement\Exporter\Exporter;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder as DatabaseQueryBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\LazyCollection;
 use Spatie\QueryBuilder\QueryBuilder;
 
 trait DataCustomizerMethods
-{
-
-    protected string $ModelClass;
+{ 
+    protected string $ModelClass; 
     protected string $modelPrimaryKeyName;
-    protected QueryBuilder $builder;
+    protected QueryBuilder | Builder | DatabaseQueryBuilder $builder;
     protected Collection | LazyCollection | null $DataCollection = null;
-    protected int $LoadedRowsMaxLimitBeforeDispatchingJob = 5;
-
-    protected int $dataRowsCount;
-    protected array $DataToExport = [];
-    protected ?Request $request = null;
-
-    abstract protected function getModelClass() : string;
-
-    //This method is useful to reduce the retrieved column count .... the unnecessary columns must not be retrieved
-    //return null when we want to get all columns
-    //Note : Don't Forget to include primary and foreign key names when you expect to load a relationship
-    abstract protected function getModelSelectingQueryColumns() : array | null;
-
-    //This method is useful to include relationships by eager loading
-    //Note : Don't Forget to include primary and foreign key names when you expect to load a relationship
-    //Note : You Can set The Relationships Conditions You need in this array without any difference when you call with method
-    abstract protected function getWithRelationshipsArray() : array;
-
-    ////This method is useful to filter the rows in Database before retrieve it
-    abstract protected function getFiltersArray() : array;
-
-    public function setCustomRequest(Request $request) : self
+    protected int $LoadedRowsMaxLimitBeforeDispatchingJob = 5; 
+    protected int $dataRowsCount; 
+    protected ?Request $request = null; // needed to save request filters and payloads values to job object on needed to run job
+ 
+    public function useRequest(Request $request) : self
     {
         $this->request = $request;
-        return $this;
-    }
-
-
-    /**
-     * @return DataCustomizerMethods|Exporter
-     * @throws Exception
-     */
-    protected function setDefaultModelClass() : self
-    {
-        $modelClass = $this->getModelClass();
-        if(!class_exists($modelClass)){throw new Exception("The Given Model Class Is Undefined !");}
-
-        $model = new $modelClass;
-        if (!$model instanceof Model){throw new Exception("The Given Model Class Is Not A Model Instance !");}
-        $this->setModelPrimaryKeyName($model);
-        unset($model);
-
-        $this->ModelClass = $modelClass;
-
         return $this;
     }
 
@@ -80,27 +44,97 @@ trait DataCustomizerMethods
      * @return DataCustomizerMethods|Exporter
      * @throws Exception
      */
-    protected function initQueryBuilder() : self
-    {
-        $this->setDefaultModelClass();
-        $this->builder = QueryBuilder::for($this->ModelClass , $this->request)
-                                        ->with( $this->getWithRelationshipsArray() )
-                                        ->allowedFilters($this->getFiltersArray())
-                                        ->datesFiltering()
-                                        ->select($this->getModelSelectingQueryColumns() ?? ['*'])
-                                        ->customOrdering();
+    protected function setModelClass() : self
+    { 
+        $modelClass = $this->getModelClass();
+        if(!class_exists($modelClass)){throw new Exception("The Given Model Class Is Undefined !");}
+
+        $model = new $modelClass;
+        if (!$model instanceof Model)
+        {
+            throw new Exception("The Given Model Class Is Not A Model Instance !");
+        }
+        $this->setModelPrimaryKeyName($model);
+        unset($model);
+
+        $this->ModelClass = $modelClass;
+
         return $this;
     }
 
+
+    protected function getPixelDefaultScopes() : array
+    {
+        return ['datesFiltering' , 'customOrdering'];
+    }
+
+    /**
+     * If more advanced functinality is needed ... override the two functions applyPixelDefaultScopes , getPixelDefaultScopes
+     * because we are preparing the default query builder only
+     */
+    protected function applyPixelDefaultScopes() : void
+    {
+        foreach($this->getPixelDefaultScopes() as $scope)
+        {
+            $this->builder->{$scope}();
+        }
+    }
+
+    public function useQueryBuilder(Builder | DatabaseQueryBuilder | QueryBuilder $builder) : self
+    {
+        $this->builder = $builder;
+        return $this;
+    }
+    
+    protected function getQueryBuilderClass() : string
+    {
+        return QueryBuilder::class;
+    }
+    /**
+     * @return Builder | DatabaseQueryBuilder | QueryBuilder
+     * @throws Exception
+     * 
+     * if another 
+     */
+    protected function initQueryBuilder() : Builder | DatabaseQueryBuilder | QueryBuilder
+    {
+        $this->setModelClass();
+        $builderClass = $this->getQueryBuilderClass(); 
+
+        if(is_subclass_of($builderClass , QueryBuilder::class))
+        {
+            return  $builderClass::for($this->ModelClass , $this->request);
+        }
+
+        return $this->ModelClass::newQuery();
+    }
+
+    protected function prepareQueryBuilder() : void
+    {
+        if(!$this->builder)
+        {
+            $builder = $this->initQueryBuilder();
+            $this->useQueryBuilder($builder);
+            $this->applyPixelDefaultScopes();
+        }
+    }
     /**
      * @param int $count
      * @return DataCustomizerMethods|Exporter
      * @throws Exception
      */
-    protected function setNeededDataCount(int $count = -1) : self
+    protected function setNeededDataCount(?int $count = null) : self
     {
-        if($count < 0 ){$count =  $this->builder->count();}
-        if($count == 0 ) { throw $this->getEmptyDataException();}
+        if(!$count)
+        {
+            $count =  $this->builder->count();
+        }
+
+        if($count == 0 ) 
+        {
+             throw $this->getEmptyDataException();
+        }
+
         $this->dataRowsCount = $count;
         return $this;
     }
@@ -116,10 +150,10 @@ trait DataCustomizerMethods
     }
 
     /**
-     * @param Collection|null $collection
+     * @param Collection|LazyCollection|null  $collection
      * @return DataCustomizerMethods|Exporter
      */
-    protected function setDataCollection(?Collection $collection = null) : self
+    protected function setDataCollection(Collection|LazyCollection|null $collection = null) : self
     {
         if($collection != null)
         {
@@ -148,8 +182,11 @@ trait DataCustomizerMethods
      */
     protected function setDefaultDataCollection() : self
     {
-        if($this->DataCollection != null){return $this;}
-        return $this->setDataCollection();
+        if(!$this->DataCollection)
+        {
+            $this->setDataCollection();
+        }
+        return $this;
     }
 
     /**
@@ -159,19 +196,12 @@ trait DataCustomizerMethods
      * This Method is used to change Exported Data from controller context ... but it is mainly changed
      * by setDefaultData method in the constructor of object
      */
-    public function setCustomDataCollection( Collection | LazyCollection $DataCollection ) : self
+    public function useDataCollection( Collection | LazyCollection|null $DataCollection = null ) : self
     {
-        return $this->setNeededDataCount($DataCollection->count())
-                    ->setDataCollection($DataCollection);
-    }
-
-    /**
-     * @return DataCustomizerMethods|Exporter
-     * @throws Exception
-     */
-    protected function setData() : self
-    {
-        $this->DataToExport =  $this->finalDataArrayProcessor->getProcessedData($this->DataCollection);
+        if($DataCollection)
+        {
+            $this->setNeededDataCount($DataCollection->count())->setDataCollection($DataCollection);
+        }
         return $this;
     }
 
@@ -184,18 +214,5 @@ trait DataCustomizerMethods
     {
         return $this->dataRowsCount > $this->LoadedRowsMaxLimitBeforeDispatchingJob;
     }
-
-    /**
-     * @return DataCustomizerMethods|Exporter
-     * @throws Exception
-     */
-    protected function setConvenientResponder() : self
-    {
-        if( $this->MustExportFiles() || $this->SupportRelationshipsFilesExporting() || $this->DoesHaveBigData() )
-        {
-            return $this->setJobDispatcherJSONResponder();
-        }
-        return $this->setStreamingResponder();
-    }
-
+ 
 }
