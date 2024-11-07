@@ -46,7 +46,7 @@ class DataArrayProcessor
             //There Is No Need To Check If DataCollection Has Data Or Not
             //Because That Always Has Data Items If Execution Arrived at This Point
             /** @var Model $model */
-            if($this->getCollectionModel()->empty())
+            if($this->getDataCollection()->isEmpty())
             {
                 //nothing will be selected
                 $this->ModelDesiredFinalColumns = $this->getModelDesiredColumnsIfNoData();

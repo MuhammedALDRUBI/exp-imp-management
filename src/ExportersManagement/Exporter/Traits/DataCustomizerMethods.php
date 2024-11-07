@@ -7,7 +7,7 @@ use ExpImpManagement\ExportersManagement\Exporter\Exporter;
 use Exception;
 use ExpImpManagement\ExportersManagement\Interfaces\SupportSpatieAlowedFilters;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as DatabaseQueryBuilder;
 use Illuminate\Http\Request;
