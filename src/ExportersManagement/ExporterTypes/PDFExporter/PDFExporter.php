@@ -66,7 +66,7 @@ abstract class PDFExporter extends Exporter
 
     protected function getStreamingResponder(): StreamingResponder
     { 
-        return new PDFStreamingResponder($this->pdfLib  );
+        return new PDFStreamingResponder( $this->pdfLib );
     }
   
     protected function getDataFileExtension() : string

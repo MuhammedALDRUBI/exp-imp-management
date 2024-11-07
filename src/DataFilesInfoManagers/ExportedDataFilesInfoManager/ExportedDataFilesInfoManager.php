@@ -10,9 +10,14 @@ class ExportedDataFilesInfoManager extends DataFilesInfoManager
     public const ValidityIntervalDayCount  = 3;
 
 
+    /**
+     * Must be handled later for multi tenancy application
+     * it is wrong for multitenancy app ... think about storing in db table or adding tenant key as a key in InfoData array
+     * after checking if app is multi tenancy app from PixelApp package config
+     */
     protected function getDataFilesInfoPath(): string
     {
-        return __DIR__ . "/ExportedDataFilesInfo.json";
+        return storage_path("app/ExportedDataFilesInfo.json");
     }
 
     /**

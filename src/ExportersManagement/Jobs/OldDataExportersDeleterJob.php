@@ -13,34 +13,30 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
 
+/**
+ * Not finished
+ * need to handle it later for multi tenancy app
+ */
+
 class OldDataExportersDeleterJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-
+ 
    protected ?CustomFileDeleter $customFileDeleter = null;
    protected ?ExportedDataFilesInfoManager $dataFilesInfoManager = null;
-   protected array $successfullyDeletedFilesNames = [];
 
+   protected array $successfullyDeletedFilesNames = [];
     /**
      * @return $this
      */
-    public function initDataFilesInfoManager(): self
+    protected function informDataFilesInfoManager() : self
     {
-        if($this->dataFilesInfoManager){return $this;}
-        $this->dataFilesInfoManager = new ExportedDataFilesInfoManager();
+        $this->dataFilesInfoManager->removeExpiredFilesInfo($this->successfullyDeletedFilesNames)
+                                   ->SaveChanges();
         return $this;
     }
-
-    protected function initCustomFileDeleter() : self
-    {
-        if($this->customFileDeleter){return $this;}
-        $this->customFileDeleter = new S3CustomFileDeleter();
-        return $this;
-    }
-
     /**
-     * @return $this
+     * @return $this 
      */
     protected function DeleteMustDeletedFiles() : self
     {
@@ -55,16 +51,28 @@ class OldDataExportersDeleterJob implements ShouldQueue
         return $this->informDataFilesInfoManager();
     }
 
+
     /**
      * @return $this
      */
-    protected function informDataFilesInfoManager() : self
+    public function initDataFilesInfoManager(): self
     {
-        $this->dataFilesInfoManager->removeExpiredFilesInfo($this->successfullyDeletedFilesNames)
-                                   ->SaveChanges();
+        if(!$this->dataFilesInfoManager)
+        {
+            $this->dataFilesInfoManager = new ExportedDataFilesInfoManager();   
+        }
         return $this;
     }
 
+    protected function initCustomFileDeleter() : self
+    {
+        if(!$this->customFileDeleter)
+        {
+            $this->customFileDeleter = new S3CustomFileDeleter();
+        }
+        return $this;
+    }
+ 
     /**
      * @return void
      * @throws Exception

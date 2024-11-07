@@ -5,6 +5,7 @@ namespace ExpImpManagement\ExportersManagement\Exporter\Traits;
 
 use ExpImpManagement\ExportersManagement\Exporter\Exporter;
 use Exception;
+use ExpImpManagement\ExportersManagement\Interfaces\SupportSpatieAlowedFilters;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -63,11 +64,18 @@ trait DataCustomizerMethods
     }
 
 
+    protected function applySpatieAllowedFilters() : void
+    {
+        if($this->builder instanceof QueryBuilder && $this instanceof SupportSpatieAlowedFilters)
+        {
+            $this->builder->allowedFilters( $this->getAllowedFilters() );
+        }
+    }
     protected function getPixelDefaultScopes() : array
     {
         return ['datesFiltering' , 'customOrdering'];
     }
-
+ 
     /**
      * If more advanced functinality is needed ... override the two functions applyPixelDefaultScopes , getPixelDefaultScopes
      * because we are preparing the default query builder only
@@ -80,6 +88,12 @@ trait DataCustomizerMethods
         }
     }
 
+    protected function callOnBuilder() : void
+    {
+        $this->applyPixelDefaultScopes();
+        $this->applySpatieAllowedFilters();
+    }
+
     public function useQueryBuilder(Builder | DatabaseQueryBuilder | QueryBuilder $builder) : self
     {
         $this->builder = $builder;
@@ -90,6 +104,15 @@ trait DataCustomizerMethods
     {
         return QueryBuilder::class;
     }
+
+    protected function initEloquentBuilder() : Builder
+    {
+        return $this->ModelClass::newQuery();
+    }
+    protected function initSpatieBuilder() : QueryBuilder
+    {
+        return $this->getQueryBuilderClass()::for($this->ModelClass , $this->request);
+    }
     /**
      * @return Builder | DatabaseQueryBuilder | QueryBuilder
      * @throws Exception
@@ -99,14 +122,12 @@ trait DataCustomizerMethods
     protected function initQueryBuilder() : Builder | DatabaseQueryBuilder | QueryBuilder
     {
         $this->setModelClass();
-        $builderClass = $this->getQueryBuilderClass(); 
 
-        if(is_subclass_of($builderClass , QueryBuilder::class))
+        if(is_subclass_of($this->getQueryBuilderClass() , QueryBuilder::class))
         {
-            return  $builderClass::for($this->ModelClass , $this->request);
-        }
-
-        return $this->ModelClass::newQuery();
+            return  $this->initSpatieBuilder();
+        } 
+        return $this->initEloquentBuilder();
     }
 
     protected function prepareQueryBuilder() : void
@@ -115,7 +136,7 @@ trait DataCustomizerMethods
         {
             $builder = $this->initQueryBuilder();
             $this->useQueryBuilder($builder);
-            $this->applyPixelDefaultScopes();
+            $this->callOnBuilder();
         }
     }
     /**

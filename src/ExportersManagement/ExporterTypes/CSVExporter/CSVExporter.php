@@ -12,8 +12,7 @@ use ExpImpManagement\Interfaces\PixelExcelExpImpLib;
 use OpenSpout\Common\Exception\InvalidArgumentException;
 use OpenSpout\Common\Exception\IOException;
 use OpenSpout\Common\Exception\UnsupportedTypeException;
-use OpenSpout\Writer\Exception\WriterNotOpenedException;
-use Rap2hpoutre\FastExcel\FastExcel; 
+use OpenSpout\Writer\Exception\WriterNotOpenedException; 
 
 abstract class CSVExporter extends Exporter
 {
