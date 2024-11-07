@@ -43,7 +43,7 @@ abstract class PDFExporter extends Exporter
      */
     protected function getViewToRender() : View
     {
-        return view($this->getViewTemplateRelativePath() , $this->DataCollection);
+        return view($this->getViewTemplateRelativePath() , ["data" => $this->DataCollection ]);
     }
     
     protected function passViewToPDFLib() : self

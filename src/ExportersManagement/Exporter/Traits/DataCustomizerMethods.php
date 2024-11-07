@@ -18,7 +18,7 @@ trait DataCustomizerMethods
 { 
     protected string $ModelClass; 
     protected string $modelPrimaryKeyName;
-    protected QueryBuilder | Builder | DatabaseQueryBuilder $builder;
+    protected QueryBuilder | Builder | DatabaseQueryBuilder | null $builder = null; 
     protected Collection | LazyCollection | null $DataCollection = null;
     protected int $LoadedRowsMaxLimitBeforeDispatchingJob = 5; 
     protected int $dataRowsCount; 
@@ -107,7 +107,7 @@ trait DataCustomizerMethods
 
     protected function initEloquentBuilder() : Builder
     {
-        return $this->ModelClass::newQuery();
+        return $this->ModelClass::query();
     }
     protected function initSpatieBuilder() : QueryBuilder
     {
@@ -187,15 +187,9 @@ trait DataCustomizerMethods
             $this->LazyDataById();
             return $this;
         }
-
-        if(empty($this->getWithRelationshipsArray()))
-        {
-            $this->cursorData();
-            return $this;
-        }
-
-        $this->LazyDataById();
-        return $this;
+ 
+        $this->cursorData();
+        return $this;  
     }
 
     /**
