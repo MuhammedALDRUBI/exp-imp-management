@@ -29,7 +29,7 @@ class ExpImpManagementServiceProvider extends ServiceProvider
     }
     protected function loadPackageRoutes() : void
     {
-        $this->loadRoutesFrom(__DIR__ . '/src/Routes/PackageRoutes.php');
+        $this->loadRoutesFrom(__DIR__ . '/../Routes/PackageRoutes.php');
     }
 
     /**
