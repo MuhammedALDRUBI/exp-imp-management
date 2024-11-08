@@ -16,8 +16,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
 
-class HugeDataExporterJob
-// implements ShouldQueue
+class HugeDataExporterJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
