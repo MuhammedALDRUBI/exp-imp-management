@@ -4,7 +4,8 @@ namespace ExpImpManagement\ExportersManagement\ExportingBaseService;
 
 use Exception;
 use ExpImpManagement\ExportersManagement\Exporter\Exporter; 
-use Illuminate\Http\JsonResponse; 
+use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 abstract class ExportingBaseService
 {
@@ -12,6 +13,10 @@ abstract class ExportingBaseService
 
     abstract protected function getExportTypesMap()  :array;
    
+    public function __construct()
+    {
+        $this->validateRequest();
+    }
     protected function initExporter($exporterTypeClass) : Exporter
     {
         if(!is_subclass_of($exporterTypeClass , Exporter::class))
@@ -21,7 +26,7 @@ abstract class ExportingBaseService
         return app()->make($exporterTypeClass);
     }
 
-    protected function getExporter() : Exporter
+    public function getExporter() : Exporter
     {
         $exportersMap = $this->getExportTypesMap();
         $exporterType = $this->data["type"];
@@ -33,9 +38,9 @@ abstract class ExportingBaseService
         return $this->initExporter( $exportersMap[$exporterType] ); 
     }
 
-    public function export() : JsonResponse
+    public function export() : JsonResponse | StreamedResponse
     { 
-        return $this->validateRequest()->getExporter()->export();
+        return $this->getExporter()->export();
     }
 
 }

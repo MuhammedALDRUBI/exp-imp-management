@@ -18,29 +18,27 @@ trait ExportingBaseServiceValidationMethods
         return DataExporterRequest::class;
     }
 
-    protected function setRequestData() : self
+    protected function setRequestData() : void
     {
         $this->data = $this->validator->getRequestData();
-        return $this;
     }
     /**
-     * @return ExporterBuilder|BuilderValidationMethods
      * @throws Exception
      */
     protected function initValidator() : Validator
     {
         $this->validator = new JSONValidator($this->getRequestFormClass());
-        return $this;
+        return $this->validator;
     }
 
     /**
-     * @return ExporterBuilder|BuilderValidationMethods
      * @throws Exception
      */
     protected function validateRequest() : self
     {
         $this->initValidator()->validate(); 
-       return $this->setRequestData();
+       $this->setRequestData();
+       return $this;
     }
  
 

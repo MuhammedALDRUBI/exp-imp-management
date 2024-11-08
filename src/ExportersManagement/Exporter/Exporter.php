@@ -104,7 +104,7 @@ abstract class Exporter
         $this->setDefaultFileName();
 
         if( $this->DataCollection == null) //if there is a DataCollection ... it is set manually in the controller context class ... no need to fetch it twice
-        {
+        { 
             $this->prepareQueryBuilder();
             $this->setNeededDataCount();
         }

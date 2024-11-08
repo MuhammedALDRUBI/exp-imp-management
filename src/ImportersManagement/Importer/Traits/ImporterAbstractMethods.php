@@ -7,10 +7,12 @@ use ExpImpManagement\ImportersManagement\DataFilesContentProcessors\DataFileCont
 trait ImporterAbstractMethods
 {
     abstract protected function getModelClass() : string;
-    abstract protected function getDataFileContentProcessor() : DataFileContentProcessor;
-    
+    abstract protected function getDataValidationRequestForm() : string;
+
+
     /** 
      * @return string
      */
     abstract protected function getDataFileExpectedExtension(): string; 
+    abstract protected function getDataFileContentProcessor() : DataFileContentProcessor;
 }

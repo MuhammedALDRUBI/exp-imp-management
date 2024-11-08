@@ -11,8 +11,7 @@ use Illuminate\Support\Facades\Response;
 class JobDispatcherJSONResponder  extends Responder
 {
     protected ?string $importerClass = null;
-    protected ?string $importedDataFileStoragePath = null;
-    protected bool $ImportedDataFileAfterProcessingDeletingStatus = false;
+    protected ?string $importedDataFileStoragePath = null; 
     protected ?DataImporterJob $job = null;
 
     /**
@@ -21,7 +20,10 @@ class JobDispatcherJSONResponder  extends Responder
      */
     protected function initJob() : self
     {
-        if($this->job){return $this;}
+        if($this->job)
+        {
+            return $this;
+        }
         if(!$this->importerClass)
         {
             throw new Exception("There Is No Importer Class Given To Job Object");
@@ -57,18 +59,7 @@ class JobDispatcherJSONResponder  extends Responder
         $this->importedDataFileStoragePath = $importedDataFileStoragePath;
         return $this;
     }
-
-    /**
-     * @param bool $status
-     * @return $this
-     * @throws Exception
-     */
-    public function setImportedDataFileAfterProcessingDeletingStatus(bool $status): self
-    {
-        $this->ImportedDataFileAfterProcessingDeletingStatus = $status;
-        return $this;
-    }
-
+ 
     /**
      * @return JsonResponse
      */
@@ -76,7 +67,7 @@ class JobDispatcherJSONResponder  extends Responder
     {
         
         $this->initJob();
-        $this->job->setImportedDataFileAfterProcessingDeletingStatus($DeleteImportedDataFileAfterProcessing);
+        $this->job->setImportedDataFileStoragePath($this->importedDataFileStoragePath);
         dispatch($this->job);
         return Response::success([] , ["Your Data File Has Been Uploaded Successfully ! , You Will Receive Your Request Result By Mail Message On Your Email !"]);
     }

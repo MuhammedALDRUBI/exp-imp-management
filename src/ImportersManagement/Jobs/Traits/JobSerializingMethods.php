@@ -10,8 +10,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 trait JobSerializingMethods
 {
     private string $importerClass;
-    protected string $importedDataFileStoragePath = ""; 
-    protected bool $ImportedDataFileAfterProcessingDeletingStatus = false;
+    protected ?string $importedDataFileStoragePath = null;  
     private Authenticatable $notifiable;
 
     /**
@@ -23,20 +22,7 @@ trait JobSerializingMethods
         $this->importedDataFileStoragePath = $importedDataFileStoragePath;
         return $this;
     }
-
-   
-    /**
-     * @param bool $status
-     * @return $this
-     * @throws Exception
-     */
-    public function setImportedDataFileAfterProcessingDeletingStatus(bool $status): self
-    {
-        $this->ImportedDataFileAfterProcessingDeletingStatus = $status;
-        return $this;
-    }
-
-
+  
     /**
      * @param string $importerClass
      * @return DataImporterJob
@@ -49,7 +35,7 @@ trait JobSerializingMethods
             throw new Exception("The Given Importer Class Is Not Valid Importer Class !");
         }
         
-        $this->importerClass = new $importerClass();;
+        $this->importerClass = $importerClass;
 
         return $this;
     }

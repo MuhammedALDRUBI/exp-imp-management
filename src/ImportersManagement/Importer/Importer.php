@@ -21,7 +21,6 @@ abstract class Importer
         ResponderMethods , ImporterAbstractMethods  ;
 
     const ImportedUploadedFilesTempFolderName =  "ImportedDataTempFiles";
-    protected string $uploadedFileTempRealPath;  //temp file real path (not in storage ... it is in the temp path for manipulating and deleting after process is done)
     protected array $ImportedDataArray = [];
     protected ?string $ModelClass = null;
 
@@ -36,6 +35,11 @@ abstract class Importer
         return $this;
     }
  
+    protected function finishImportingOperation() : Importer
+    {
+        return $this->deleteTempUploadedFile();
+    }
+ 
     /**
      * @return $this
      * @throws Exception
@@ -43,7 +47,7 @@ abstract class Importer
     protected function setFileDataArray() : self
     {
         $this->openImportedDataFileForProcessing();
-        $this->ImportedDataArray = $this->getDataToImport(); 
+        $this->ImportedDataArray = $this->getDataToImport();
         return $this;
     }
 
@@ -56,38 +60,17 @@ abstract class Importer
         return $this->setFileDataArray();
     }
 
-    protected function successfulImportingTransaction() : Importer
-    {
-        DB::commit();
-        return $this->deleteTempUploadedFile();
-    }
-
-    protected function failedImportingTransactrion() : Importer
-    {
-        DB::rollBack();
-        return $this;
-    }
-    protected function startImportingDBTransaction() : void
-    {
-        DB::beginTransaction();
-    }
-
     /**
      * @return void
      */
     public function importingJobFun() : void
     {
-        try {
-            $this->setupImporter()->fetchFileData()->importData();
-            $this->successfulImportingTransaction();
-        }catch (Exception $e)
-        {
-            $this->failedImportingTransactrion();
-        }
+        $this->setupImporter()->fetchFileData()->importData()->finishImportingOperation();
     }
+
     protected function setupImporter() : Importer
     {
-        return $this->initFileProcessor()->setModelClass()->setValidationManger();
+        return $this->initFileProcessor()->setModelClass()->setValidationManager();
     }
 
     /**

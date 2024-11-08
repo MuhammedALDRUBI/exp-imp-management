@@ -16,7 +16,8 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
 
-class HugeDataExporterJob implements ShouldQueue
+class HugeDataExporterJob
+// implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -100,7 +101,7 @@ class HugeDataExporterJob implements ShouldQueue
         $this->setExporter();
         $this->exporter->useRequest( $this->updateRequest($request) );
         $this->exporter->useDataCollection($this->DataCollection);
-        $ExportedDataDownloadingPath = $this->exporter->exportingJobFun();
+        $ExportedDataDownloadingPath = $this->exporter->exportingJobFun(); 
         $this->NotifyExportedData($ExportedDataDownloadingPath);
     }
 }

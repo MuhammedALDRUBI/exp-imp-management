@@ -5,11 +5,11 @@ namespace ExpImpManagement\ImportersManagement\Importer\Traits;
 use ExpImpManagement\ImportersManagement\DataFilesContentProcessors\DataFileContentProcessor;
 use ExpImpManagement\ImportersManagement\Importer\Importer;
 use ExpImpManagement\ImportersManagement\Interfaces\CareAboutDateTruth;
-use Exception;
-use App\Models\User;
+use Exception; 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 trait DataCustomizerMethods
 {
@@ -17,10 +17,45 @@ trait DataCustomizerMethods
     protected ?DataFileContentProcessor $dataFileContentProcessor = null;
     protected array $ModelDesiredColumns = [];
 
-    protected function setDataFileContentProcessorProps() : DataFileContentProcessor
+    protected function setModelClass() : self
     {
+        $modelClass = $this->getModelClass() ;
+        if(! is_subclass_of($modelClass , Model::class))
+        {
+            throw new Exception("Invald model class is provided !");
+        }
+        $this->ModelClass = $modelClass;
+        return $this;
+    }
+
+    protected function singleRowValidationFailed(array $modelData , Throwable $e) : void
+    {
+        /**
+         * Need to set a behavior for failing validation
+         */
+        return ;
+    }
+    protected function successModelfulImportingTransaction() : void
+    {
+        DB::commit();  
+    }
+
+    protected function failedModelImportingTransactrion() : void
+    {
+        /**
+         * Need to set a behavior for failing inserting
+         */
+        DB::rollBack(); 
+    }
+    protected function startModelImportingDBTransaction() : void
+    {
+        DB::beginTransaction();
+    }
+
+    protected function setDataFileContentProcessorProps() : DataFileContentProcessor
+    { 
         return $this->dataFileContentProcessor->setFilesProcessor($this->filesProcessor)
-                                              ->setFilePathToProcess($this->uploadedFileTempRealPath);
+                                              ->setFilePathToProcess($this->uploadedFileStorageRealPath);
     }
 
     protected function initDataFileContentProcessor() : DataFileContentProcessor
@@ -66,6 +101,31 @@ trait DataCustomizerMethods
         return $this;
     }
 
+    protected function initNewModel() : Model
+    {
+        return app()->make($this->ModelClass);
+    }
+    
+    protected function importModel(array $row) : void
+    {
+        
+        try {
+
+            $this->startModelImportingDBTransaction();
+
+            $Model = $this->initNewModel();
+
+            $Model->forceFill($row);  
+
+            $Model->save(); 
+
+            $this->successModelfulImportingTransaction();
+
+        }catch (Exception $e)
+        {
+            $this->failedModelImportingTransactrion();
+        }
+    }
     protected function getModelDesiredColumnValues(array $dataRow) : array
     {
         $columnsValues = [] ;
@@ -80,54 +140,22 @@ trait DataCustomizerMethods
         return $columnsValues;
     }
 
-    protected function setModelClass() : self
-    {
-        $modelClass = $this->getModelClass() ;
-        if(! is_subclass_of($modelClass , Model::class))
-        {
-            throw new Exception("Invald model class is provided !");
-        }
-        $this->ModelClass = $modelClass;
-        return $this;
-    }
-
-    protected function initNewModel() : Model
-    {
-        return app()->make($this->ModelClass);
-    }
-    
-    protected function importModel(array $row) : Model
-    {
-        $Model = $this->initNewModel();
-        $Model->forceFill($row);
-        $Model->save();
-        return $Model; 
-    }
-
     /**
-     * @param array $row
-     * @return Model | null
+     * @param array $row 
      * @throws Exception
      */
-    protected function importDataRow(array $row) : Model | null
+    protected function importDataRow(array $row) : void
     {
-        /**
-         * Need to handle exception notification
-         */
         $this->validateSingleModel($row);
 
         $fillable = $this->getModelDesiredColumnValues($row);
         if(!empty($fillable))
-        {
-            return $this->importModel($fillable);
-        }
-         /**
-         * Need to handle exception notification
-         */
-        return null;
+        {  
+           $this->importModel($fillable);
+        } 
     }
 
-    protected function importDataRows(array $row) : void
+    protected function importDataRows() : void
     {
         foreach ($this->ImportedDataArray as $row)
         {
@@ -139,16 +167,10 @@ trait DataCustomizerMethods
      * @throws Exception
      */
     protected function importData() : Importer
-    {
-        /**
-         * Need to handle exception notification
-         */
-        $this->validateDataGenerally();
-        $this->startImportingDBTransaction();
-        $this->setModelDesiredColumns(); 
+    {  
+        $this->setModelDesiredColumns();  
+        $this->importDataRows();
         return $this;
     }
-
-
-
+ 
 }
