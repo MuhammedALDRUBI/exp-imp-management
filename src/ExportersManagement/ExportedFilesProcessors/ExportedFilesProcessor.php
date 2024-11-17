@@ -12,15 +12,18 @@ class ExportedFilesProcessor extends TemporaryFilesProcessor
 
     use  ExportedDataFilesInfoManagerMethods;
 
-    /**
-     * @param string $filePath
-     * @return string
+       /**
+     * @param string $filePathToUpload
+     * @param string $fileName
+     * @param string $fileFolderRelevantPath
      * @throws Exception
+     * @return string
+     * Returns Uploaded File's Relevant path in Storage (need to concatenate it with storage main path  )
      */
-    public function ExportedFilesStorageUploading(string $filePath) : string
+    public function uploadToStorage(string $filePathToUpload , string $fileName = "", string $fileFolderRelevantPath = "" ) : string
     {
-        $fileNewRelevantPath = $this->uploadToStorage($filePath);
+        $fileNewRelevantPath =  parent::uploadToStorage(  $filePathToUpload ,   $fileName  ,   $fileFolderRelevantPath   );
         $this->informExportedDataFilesInfoManager($fileNewRelevantPath);
         return $fileNewRelevantPath;
-    }
+    } 
 }

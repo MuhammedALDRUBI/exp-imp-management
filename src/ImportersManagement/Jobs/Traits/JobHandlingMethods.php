@@ -6,6 +6,7 @@ use ExpImpManagement\ImportersManagement\Importer\Importer;
 use ExpImpManagement\ImportersManagement\Jobs\DataImporterJob;
 use ExpImpManagement\ImportersManagement\Notifications\SuccessfulImportingNotification;
 use Exception;
+use Illuminate\Notifications\Notification;
 
 trait JobHandlingMethods
 {
@@ -33,12 +34,16 @@ trait JobHandlingMethods
         return $this->setImporterProps();
     }
 
+    protected function getConvinientNotification() :Notification
+    {
+        return $this->importer->getConvinientNotification();
+    }
     /**
      * @return DataImporterJob
      */
     protected function SuccessfullyImportingDataNotifier( ) : DataImporterJob
     {
-        $this->notifiable->notify(new SuccessfulImportingNotification());
+        $this->notifiable->notify( $this->getConvinientNotification() );
         return $this;
     }
 }

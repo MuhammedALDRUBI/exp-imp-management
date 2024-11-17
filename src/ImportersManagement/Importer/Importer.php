@@ -10,6 +10,8 @@ use ExpImpManagement\ImportersManagement\Importer\Traits\ResponderMethods;
 use ExpImpManagement\ImportersManagement\Importer\Traits\ValidationMethods;
 use TemporaryFilesHandlers\TemporaryFilesProcessors\TemporaryFilesProcessor;
 use Exception;
+use ExpImpManagement\ImportersManagement\Importer\Traits\NotificationMethods;
+use ExpImpManagement\ImportersManagement\ImportingFilesProcessors\ImportingFilesProcessor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
@@ -18,19 +20,19 @@ abstract class Importer
 {
 
     use ValidationMethods , UploadedFileOperations , DataCustomizerMethods ,
-        ResponderMethods , ImporterAbstractMethods  ;
+        ResponderMethods , ImporterAbstractMethods   , NotificationMethods;
 
     const ImportedUploadedFilesTempFolderName =  "ImportedDataTempFiles";
     protected array $ImportedDataArray = [];
     protected ?string $ModelClass = null;
 
-    protected ?TemporaryFilesProcessor $filesProcessor = null;
+    protected ?ImportingFilesProcessor $filesProcessor = null;
 
     protected function initFileProcessor() : Importer
     {
         if(!$this->filesProcessor)
         {
-             $this->filesProcessor = new TemporaryFilesProcessor(); 
+             $this->filesProcessor = new ImportingFilesProcessor(); 
         }
         return $this;
     }

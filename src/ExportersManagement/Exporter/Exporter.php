@@ -143,7 +143,7 @@ abstract class Exporter
         return CustomFileHandler::processFolderPath($DataFileContainerFolderPath) . $this->fileFullName;
     }
 
-    protected function generateFileFinalURL(string $fileName) : string
+    protected function generateFileAssetURL(string $fileName) : string
     {
         return URL::temporarySignedRoute(
                 "exported-file-downloading" ,
@@ -159,7 +159,7 @@ abstract class Exporter
      */
     protected function uploadFinalFile() : string
     {
-        return $this->filesProcessor->ExportedFilesStorageUploading($this->finalFilePath);
+        return $this->filesProcessor->uploadToStorage($this->finalFilePath);
     }
 
     /**
@@ -185,7 +185,7 @@ abstract class Exporter
     {
         $this->finalFilePath = $this->prepareDataFileToUpload();
         $this->uploadFinalFile();
-        return $this->generateFileFinalURL(
+        return $this->generateFileAssetURL(
                     $this->filesProcessor->getFileDefaultName($this->finalFilePath) // geting the name after the child class handled it by setDataFileToExportedFilesProcessor()
                 );
     }

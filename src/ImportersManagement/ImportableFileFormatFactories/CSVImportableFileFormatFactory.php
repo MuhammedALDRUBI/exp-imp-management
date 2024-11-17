@@ -4,6 +4,8 @@ namespace ExpImpManagement\ImportersManagement\ImportableFileFormatFactories;
 
 use ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\FormatColumnInfoComponents\CSVFormatColumnInfoComponent;
 use ExpImpManagement\Interfaces\PixelExcelFormatFactoryLib;
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -15,9 +17,10 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 abstract class CSVImportableFileFormatFactory 
                extends ImportableFileFormatFactory 
-               implements WithStrictNullComparison, WithEvents, WithHeadings, WithColumnWidths, WithStyles
+               implements FromCollection , WithStrictNullComparison, WithEvents, WithHeadings, WithColumnWidths, WithStyles
 {
  
+    protected ?Collection $dataToManuallyChange = null;
     protected string $fileName;
     protected  string $writerType = "Csv";
     protected array $headers = [];
@@ -38,7 +41,6 @@ abstract class CSVImportableFileFormatFactory
         $nameParts = explode("." , $fileName);
         return $nameParts[0] . ".csv";
     }
-
     protected function initPixelExcelFormatFactoryLib() : PixelExcelFormatFactoryLib
     {
         return  app()->make(PixelExcelFormatFactoryLib::class);   
@@ -49,6 +51,30 @@ abstract class CSVImportableFileFormatFactory
         return $this->initPixelExcelFormatFactoryLib()->download($this , $this->fileName , $this->writerType , $this->headers );
     }
     
+    public function getRawContent()
+    {
+        return $this->initPixelExcelFormatFactoryLib()->raw($this ,  $this->writerType );
+    }
+
+    public function collection()
+    {
+        return $this->dataToManuallyChange ?? collect();
+    }
+    protected function getValidSortedData(Collection $data) : Collection
+    {
+        //must return the values by sorting its keys based on headings sorttinh style
+        return $data;
+    }
+    public function setDataFileToManuallyChange(array | Collection $data ) : self
+    {
+        if(is_array($data))
+        {
+            $data = collect($data);
+        }
+        $this->dataToManuallyChange = $this->getValidSortedData($data);
+        return $this;
+    }
+
     protected function setValidColumnFormatInfoCompoenents() : void
     {
         array_filter(
@@ -82,11 +108,13 @@ abstract class CSVImportableFileFormatFactory
 
     public function headings(): array
     {
-        return array_map(function($component)
-               {
-                    return $component->getColumnHeaderName();
-               } , $this->validColumnFormatInfoCompoenents);
-        
+        $headings = array_map(function($component)
+                    {
+                            return $component->getColumnHeaderName();
+                    } , $this->validColumnFormatInfoCompoenents);
+
+        sort($headings);
+        return $headings;
     }
 
     public function registerEvents(): array

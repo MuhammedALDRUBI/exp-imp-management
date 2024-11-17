@@ -5,7 +5,8 @@ namespace ExpImpManagement\ExportersManagement\ExporterTypes\PDFExporter;
 use ExpImpManagement\ExportersManagement\Exporter\Exporter; 
 use ExpImpManagement\ExportersManagement\ExporterTypes\PDFExporter\Responders\PDFStreamingResponder;
 use ExpImpManagement\ExportersManagement\Responders\StreamingResponder;
-use Exception;  
+use Exception;
+use ExpImpManagement\ExportersManagement\Interfaces\SupportSpatieAlowedFilters;
 use Mpdf\MpdfException;
 use PixelDomPdf\Interfaces\PixelPdfNeedsProvider; 
 use Illuminate\Contracts\View\View;
@@ -13,7 +14,7 @@ use Illuminate\Contracts\View\View;
 /**
  * @prop PDFStreamingResponder |  $responder
  */
-abstract class PDFExporter extends Exporter
+abstract class PDFExporter extends Exporter  implements SupportSpatieAlowedFilters
 { 
 
     protected ?PixelPdfNeedsProvider $pdfLib = null; 

@@ -1,10 +1,10 @@
 <?php
 
-namespace ExpImpManagement\DataFilesInfoManagers\ExportedDataFilesInfoManager;
+namespace ExpImpManagement\DataFilesInfoManagers\ImportingDataFilesInfoManagers;
 
 use ExpImpManagement\DataFilesInfoManagers\DataFilesInfoManager;
 
-class ExportedDataFilesInfoManager extends DataFilesInfoManager
+class ImportingRejectedDataFilesInfoManager extends DataFilesInfoManager
 {
 
     public const ValidityIntervalDayCount  = 7;
@@ -17,7 +17,7 @@ class ExportedDataFilesInfoManager extends DataFilesInfoManager
      */
     protected function getDataFilesInfoPath(): string
     {
-        return storage_path("app/ExportedDataFilesInfo.json");
+        return storage_path("app/ImportingRejectedDataFilesInfo.json");
     }
 
     /**

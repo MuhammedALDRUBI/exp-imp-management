@@ -40,7 +40,7 @@ trait DataCustomizerMethods
         DB::commit();  
     }
 
-    protected function failedModelImportingTransactrion() : void
+    protected function failedModelImportingTransactrion(array $row , Exception $e) : void
     {
         /**
          * Need to set a behavior for failing inserting
@@ -123,9 +123,10 @@ trait DataCustomizerMethods
 
         }catch (Exception $e)
         {
-            $this->failedModelImportingTransactrion();
+            $this->failedModelImportingTransactrion( $row , $e);
         }
     }
+
     protected function getModelDesiredColumnValues(array $dataRow) : array
     {
         $columnsValues = [] ;

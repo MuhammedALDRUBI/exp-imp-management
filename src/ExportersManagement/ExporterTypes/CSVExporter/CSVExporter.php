@@ -8,13 +8,14 @@ use ExpImpManagement\ExportersManagement\FinalDataArrayProcessors\DataArrayProce
 use ExpImpManagement\ExportersManagement\Responders\StreamingResponder;
 use Exception;
 use ExpImpManagement\ExportersManagement\Exporter\Exporter;
+use ExpImpManagement\ExportersManagement\Interfaces\SupportSpatieAlowedFilters;
 use ExpImpManagement\Interfaces\PixelExcelExpImpLib;
 use OpenSpout\Common\Exception\InvalidArgumentException;
 use OpenSpout\Common\Exception\IOException;
 use OpenSpout\Common\Exception\UnsupportedTypeException;
 use OpenSpout\Writer\Exception\WriterNotOpenedException; 
 
-abstract class CSVExporter extends Exporter
+abstract class CSVExporter extends Exporter implements SupportSpatieAlowedFilters
 {
     protected ?PixelExcelExpImpLib $pixelExpImpLib = null;
 
