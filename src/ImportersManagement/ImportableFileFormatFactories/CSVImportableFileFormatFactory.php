@@ -12,7 +12,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation; 
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 abstract class CSVImportableFileFormatFactory 
@@ -125,7 +125,8 @@ abstract class CSVImportableFileFormatFactory
 
                 foreach($this->validColumnFormatInfoCompoenents as $component)
                 {
-                    $this->setDropDownColumnValidation($component, $event);
+                    $this->setColumnValidation($component, $event); 
+                    $event->sheet->getColumnDimension($component->getColumnCharSymbol())->setAutoSize(true);
                 } 
 
                 $this->setFirstRowHeight($event);
@@ -134,45 +135,21 @@ abstract class CSVImportableFileFormatFactory
         ];
     }
 
-    public function setDropDownColumnValidation(CSVFormatColumnInfoComponent $columnComponent, AfterSheet $event)
+    public function setColumnValidation(CSVFormatColumnInfoComponent $columnComponent, AfterSheet $event)
     {
-        //A1048576 is Excel's maximum row range.
-        $rowRange = $columnComponent->getColumnCharSymbol() ."1:A1048576" ;
-        $sheet = $event->sheet->getDelegate();
-
-        $dataValidation = new DataValidation();
-        $dataValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
-        $dataValidation->setAllowBlank(false);
-        $dataValidation->setShowInputMessage(true);
-        $dataValidation->setShowErrorMessage(true);
-        $dataValidation->setShowDropDown(true);
-        $dataValidation->setErrorTitle('Input error');
-
-
-        if($dataType = $columnComponent->getDataType())
+        if($cellValidationSetter = $columnComponent->getCellDataValidation())
         {
-            $dataValidation->setType( $dataType );
-            $dataValidation->setError('Value is not ' . $dataType  . " typed value !");
-            $dataValidation->setPromptTitle('Set a valid ' . $dataType . " typed value ");
-            $dataValidation->setPrompt('Please set a valid ' . $dataType . " typed value ");
-        }
+            //A1048576 is Excel's maximum row range.
+            $rowRange = $columnComponent->getColumnCharSymbol() ."1:A1048576" ;
+            $sheet = $event->sheet->getDelegate();
 
-        if($dataType 
-           &&
-           $dataType == DataValidation::TYPE_LIST 
-           &&
-           $options =  $columnComponent->getValidValues()
-        )
-        { 
-            $dataValidation->setError('Value is not in list.');
-            $dataValidation->setPromptTitle('Pick from list');
-            $dataValidation->setPrompt('Please pick a value from the drop-down list.');
-            $dataValidation->setFormula1(sprintf('"%s"', implode(',', $options)));
+            $dataValidation = new DataValidation();
+
+            $cellValidationSetter->setCellDataValidation($dataValidation);
+
+            $sheet->setDataValidation($rowRange , $dataValidation);
         }
-        $sheet->setDataValidation($rowRange , $dataValidation);
-          
-        $event->sheet->getColumnDimension($columnComponent->getColumnCharSymbol())->setAutoSize(true);
-         
+            
     }
     
 

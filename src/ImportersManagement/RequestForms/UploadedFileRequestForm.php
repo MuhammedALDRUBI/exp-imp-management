@@ -15,10 +15,9 @@ class UploadedFileRequestForm extends BaseFormRequest
     public function rules($data): array
     { 
         return [
-            'file' => [   
-                            "required",
-                            "mimes:csv,txt",
-                            "mimetypes:text/csv,application/csv",
+            'file' => [    
+                            "required", 
+                            "mimetypes:text/csv,application/csv,text/plain",
                       ],
         ];
     }
@@ -32,8 +31,7 @@ class UploadedFileRequestForm extends BaseFormRequest
     public function messages()
     {
         return [
-            "file.required" => "A file is required",
-            "file.mimes" => "The Allowed uploaded File's Extension Must Be.Csv ",
+            "file.required" => "A file is required", 
             "file.mimetypes" => "The Allowed uploaded File Must Be Valid CSV File",
         ];
     }

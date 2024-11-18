@@ -2,17 +2,20 @@
 
 namespace ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\FormatColumnInfoComponents;
 
-use Exception;
+use Exception; 
+use ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\ValidationDataTypeSetters\CSVCellValidationDataTypeSetters\CSVCellValidationDataTypeSetter;
 
 class CSVFormatColumnInfoComponent extends FormatColumnInfoComponent
 {
     
-    protected array $definedDataTypes = [ "date" , "decimal" , "list" , "textLength" , "time" ];
+    // protected array $definedDataTypes = [ "date" , "decimal" , "list" , "textLength" , "time" ];
     protected string $columnCharSymbol;
     protected string $columnHeaderName;
-    protected string $dataType;
+    // protected string $dataType;
     protected ?int $width  = null;
-    protected ?array $validValues = null;
+    protected ?CSVCellValidationDataTypeSetter $cellValidationSetter = null;
+
+    // protected ?array $validValues = null;
 
     public function __construct(string $columnCharSymbol , string $columnHeaderName  )
     {
@@ -43,33 +46,42 @@ class CSVFormatColumnInfoComponent extends FormatColumnInfoComponent
         return $this;
     }
 
+    public function setCellDataValidation(CSVCellValidationDataTypeSetter $cellValidationSetter) : self
+    {
+        $this->cellValidationSetter = $cellValidationSetter;
+        return $this;
+    }
+    public function getCellDataValidation() : ?CSVCellValidationDataTypeSetter
+    {
+        return $this->cellValidationSetter;
+    }
     // Setter for $dataType
-    public function setDataType(string $dataType): self
-    {
-        if(!in_array($dataType , $this->definedDataTypes))
-        {
-            throw new Exception("The selected " . $this->columnHeaderName . " column's data type " . $dataType . " is not defined !");
-        }
+    // public function setDataType(string $dataType): self
+    // {
+    //     if(!in_array($dataType , $this->definedDataTypes))
+    //     {
+    //         throw new Exception("The selected " . $this->columnHeaderName . " column's data type " . $dataType . " is not defined !");
+    //     }
 
-        $this->dataType = $dataType;
-        return $this;
-    }
+    //     $this->dataType = $dataType;
+    //     return $this;
+    // }
 
-    // Getter for $dataType
-    public function getDataType(): string
-    {
-        return $this->dataType;
-    }
+    // // Getter for $dataType
+    // public function getDataType(): string
+    // {
+    //     return $this->dataType;
+    // }
 
-    public function defineValidValues(array $values) : self
-    {
-        $this->validValues = $values;
-        return $this;
-    }
-    public function getValidValues() : ?array
-    {
-        return $this->validValues;
-    }
+    // public function defineValidValues(array $values) : self
+    // {
+    //     $this->validValues = $values;
+    //     return $this;
+    // }
+    // public function getValidValues() : ?array
+    // {
+    //     return $this->validValues;
+    // }
     public function setColumnWidth(int $width) : self
     {
         $this->width = $width;
