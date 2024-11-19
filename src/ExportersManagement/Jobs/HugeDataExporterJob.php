@@ -100,7 +100,7 @@ class HugeDataExporterJob implements ShouldQueue
         $this->setExporter();
         $this->exporter->useRequest( $this->updateRequest($request) );
         $this->exporter->useDataCollection($this->DataCollection);
-        $ExportedDataDownloadingPath = $this->exporter->exportingJobFun(); 
+        $ExportedDataDownloadingPath = $this->exporter->exportingJobFun();  
         $this->NotifyExportedData($ExportedDataDownloadingPath);
     }
 }

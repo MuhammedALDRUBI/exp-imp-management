@@ -101,12 +101,13 @@ abstract class CSVExporter extends Exporter implements SupportSpatieAlowedFilter
      * @throws WriterNotOpenedException
      * @throws Exception
      */
-    protected function setDataFileToExportedFilesProcessor() : string
+    protected function uploadDataFileToTempPath() : string
     {
-        return $this->filesProcessor->HandleTempFileToCopy(
-                    $this->pixelExpImpLib->data($this->DataCollection)->export( $this->fileFullName ),
-                    $this->fileFullName
-                )->copyToTempPath();
+        $tempFolderPath = $this->filesProcessor->HandleTempFileToCopy(
+                                                                        $this->pixelExpImpLib->data($this->DataCollection)->export( $this->fileFullName ),
+                                                                        $this->fileFullName
+                                                                    )->copyToTempPath();
+        return $tempFolderPath . $this->fileFullName;
     }
 
 }

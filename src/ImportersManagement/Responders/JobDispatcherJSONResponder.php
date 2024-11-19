@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Response;
 class JobDispatcherJSONResponder  extends Responder
 {
     protected ?string $importerClass = null;
-    protected ?string $importedDataFileStoragePath = null; 
+    protected ?string $uploadedFileTempRealPath = null; 
     protected ?DataImporterJob $job = null;
 
     /**
@@ -29,7 +29,7 @@ class JobDispatcherJSONResponder  extends Responder
             throw new Exception("There Is No Importer Class Given To Job Object");
         }
 
-        if(!$this->importedDataFileStoragePath)
+        if(!$this->uploadedFileTempRealPath)
         {
              throw new Exception("The Imported File Path Is Not Passed To JobDispatcherJSONResponder");
         }
@@ -54,9 +54,9 @@ class JobDispatcherJSONResponder  extends Responder
      * @return $this
      * @throws Exception
      */
-    public function setImportedDataFileStoragePath(string $importedDataFileStoragePath  ): self
+    public function setImportedDataFileTempPath(string $uploadedFileTempRealPath  ): self
     {
-        $this->importedDataFileStoragePath = $importedDataFileStoragePath;
+        $this->uploadedFileTempRealPath = $uploadedFileTempRealPath;
         return $this;
     }
  
@@ -67,7 +67,7 @@ class JobDispatcherJSONResponder  extends Responder
     {
         
         $this->initJob();
-        $this->job->setImportedDataFileStoragePath($this->importedDataFileStoragePath);
+        $this->job->setImportedDataFileTempPath($this->uploadedFileTempRealPath);
         dispatch($this->job);
         return Response::success([] , ["Your Data File Has Been Uploaded Successfully ! , You Will Receive Your Request Result By Mail Message On Your Email !"]);
     }

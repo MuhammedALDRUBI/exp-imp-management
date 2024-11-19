@@ -1,8 +1,7 @@
 <?php
 
 namespace ExpImpManagement\ImportersManagement\ImportingFilesProcessors;
-
-use CustomFileSystem\CustomFileHandler;
+ 
 use ExpImpManagement\DataFilesInfoManagers\ImportingDataFilesInfoManagers\ImportingRejectedDataFilesInfoManager;
 
 class CSVImportingFilesProcessor extends ImportingFilesProcessor
@@ -20,14 +19,12 @@ class CSVImportingFilesProcessor extends ImportingFilesProcessor
         return $this;
     }
 
-    public function informImportingRejectedDataFilesInfoManager(string $fileRelevantPath) : string
-    {
+    public function informImportingRejectedDataFilesInfoManager(string $fileRelevantPath , string $fileRealPath) : string
+    { 
         $this->initImportingRejectedDataFilesInfoManager();
 
-        $fileName = $this->getFileDefaultName($fileRelevantPath);
-
-        $fileRealPath = CustomFileHandler::getFileStoragePath($fileRelevantPath , $this->tempFilesDisk);
-
+        $fileName = $this->getFileDefaultName($fileRelevantPath); 
+        
         return $this->importingRejectedDataFilesInfoManager->addNewFileInfo( $fileName , $fileRealPath , $fileRelevantPath )
                                                            ->SaveChanges();
     }

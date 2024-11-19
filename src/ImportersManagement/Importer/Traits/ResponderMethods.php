@@ -22,7 +22,8 @@ trait ResponderMethods
     protected function setResponderProps(JobDispatcherJSONResponder $responder) : void
     {
         $responder->setImporterClass($this)
-                  ->setImportedDataFileStoragePath($this->uploadedFileStorageRelevantPath );
+                  ->setImportedDataFileTempPath($this->uploadedFileTempRealPath );
+                //   ->setImportedDataFileStoragePath($this->uploadedFileStorageRelevantPath );
     }
     /**
      * @throws Exception

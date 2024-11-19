@@ -18,7 +18,7 @@ trait JobHandlingMethods
      */
     private function setImporterProps() : Importer
     {
-        return $this->importer->setUploadedFileStorageRelevantPath($this->importedDataFileStoragePath);
+        return $this->importer->setUploadedFileTempRealPath($this->importedDataFileTempPath);
     }
 
     /**

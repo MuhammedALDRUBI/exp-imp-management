@@ -22,9 +22,12 @@ trait ExportedDataFilesInfoManagerMethods
 
     protected function informExportedDataFilesInfoManager(string $fileRelevantPath) : string
     {
+        /**
+         * $fileRelevantPath comming after uploading a file to the temp folder path ...it contains the tem folder names
+         */
         $this->initExportedDataFilesInfoManager();
 
-        $fileName = $this->getFileDefaultName($fileRelevantPath);
+        $fileName = $this->getFileDefaultName($fileRelevantPath); 
 
         $fileRealPath = CustomFileHandler::getFileStoragePath($fileRelevantPath , $this->tempFilesDisk);
 

@@ -80,10 +80,10 @@ abstract class PDFExporter extends Exporter  implements SupportSpatieAlowedFilte
      * @throws MpdfException
      * @throws Exception
      */
-    protected function setDataFileToExportedFilesProcessor() : string
+    protected function uploadDataFileToTempPath() : string
     {
-        return $this->filesProcessor->HandleTempFileContentToCopy( $this->pdfLib->output() , $this->fileFullName )
-                                    ->copyToTempPath();
+        $tempFolderPath = $this->filesProcessor->HandleTempFileContentToCopy( $this->pdfLib->output() , $this->fileFullName )->getCopiedTempFilesFolderPath();
+        return $tempFolderPath . $this->fileFullName;
     }
 
 }

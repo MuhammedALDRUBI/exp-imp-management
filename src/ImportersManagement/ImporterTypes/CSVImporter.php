@@ -67,7 +67,7 @@ abstract class CSVImporter extends Importer
         }
         return  parent::setModelDesiredColumns();
     }
-    
+  
     protected function addRejectedRowToManuallyChanging(array $row)
     {
         $this->dataToManuallyChange[] = $row;
@@ -81,23 +81,24 @@ abstract class CSVImporter extends Importer
     protected function failedModelImportingTransactrion(array $row , Exception $e) : void
     {
         parent::failedModelImportingTransactrion($row , $e);
-        $this->addRejectedRowToManuallyChanging($row);
+        $this->addRejectedRowToManuallyChanging($row); 
     }
-
-    protected function composeRejectedFilePath() : string
-    {
-        return $this->filesProcessor->getTempFilesFolderPath() . $this->rejectedDataFileName;
-    }
+    
 
     protected function processRejectedDataFile($fileContent) : void
     {  
         $this->filesProcessor->HandleTempFileContentToCopy($fileContent , $this->rejectedDataFileName); 
-        $this->filesProcessor->informImportingRejectedDataFilesInfoManager($this->rejectedDataFileName); 
+        $this->filesProcessor->informImportingRejectedDataFilesInfoManager($this->rejectedDataFileName , $this->rejectedDataFilePath); 
+    }
+
+    protected function composeRejectedFilePath() : string
+    {
+        return $this->filesProcessor->getTempFileFolderPath($this->rejectedDataFileName)   ;
     }
 
     protected function composeRejectedDataFileName() : string
     { 
-        return "importing-rejected-data-" . date("Y-m-d") . ".csv" ;
+        return "importing-rejected-data-" . date("Y-m-d-h-i-s") . ".csv" ;
     }
 
     protected function generateFileAssetURL(string $fileName) : string
@@ -121,7 +122,7 @@ abstract class CSVImporter extends Importer
         {
             
             $this->rejectedDataFileName = $this->composeRejectedDataFileName();;
-            $this->rejectedDataFileName = $this->composeRejectedFilePath();
+            $this->rejectedDataFilePath = $this->composeRejectedFilePath();
 
             //after this method the file will be copied to the temp path in the storage
             $this->processRejectedDataFile($fileContent);
@@ -135,11 +136,11 @@ abstract class CSVImporter extends Importer
     public function getConvinientNotification() : Notification
     {
         if(!$this->rejectedDataFilePath)
-        {
+        { 
             return parent::getConvinientNotification();
         }
 
-        $fuileAssetLink = $this->generateFileAssetURL($this->rejectedDataFileName) ;
-        return new RejectedDataFileNotifier($fuileAssetLink);
+        $fileAssetLink = $this->generateFileAssetURL($this->rejectedDataFileName) ; 
+        return new RejectedDataFileNotifier($fileAssetLink);
     }
 }

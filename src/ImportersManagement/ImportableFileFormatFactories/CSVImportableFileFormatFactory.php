@@ -77,12 +77,12 @@ abstract class CSVImportableFileFormatFactory
 
     protected function setValidColumnFormatInfoCompoenents() : void
     {
-        array_filter(
-                $this->getColumnFormatInfoCompoenents() ,
-                function($component)
-                {
-                    return $component instanceof CSVFormatColumnInfoComponent;
-                });
+        $this->validColumnFormatInfoCompoenents =  array_filter(
+                                                                $this->getColumnFormatInfoCompoenents() ,
+                                                                function($component)
+                                                                {
+                                                                    return $component instanceof CSVFormatColumnInfoComponent;
+                                                                });
     }
 
     public function columnWidths(): array
@@ -106,14 +106,23 @@ abstract class CSVImportableFileFormatFactory
         ];
     }
 
+    public function sortKeysValuesArray(array &$array)
+    { 
+        ksort($array); 
+    }
+    public function sortValueArray(array &$array)
+    { 
+        sort($array); 
+    }
+
     public function headings(): array
-    {
+    { 
         $headings = array_map(function($component)
                     {
                             return $component->getColumnHeaderName();
                     } , $this->validColumnFormatInfoCompoenents);
 
-        sort($headings);
+        $this->sortValueArray($headings);
         return $headings;
     }
 

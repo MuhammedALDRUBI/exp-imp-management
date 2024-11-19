@@ -18,5 +18,5 @@ trait ExporterAbstractMethods
      */
     abstract protected function getDataFileExtension() : string;
     abstract protected function getStreamingResponder() : StreamingResponder;
-    abstract protected function setDataFileToExportedFilesProcessor() : string;
+    abstract protected function uploadDataFileToTempPath() : string;
 }

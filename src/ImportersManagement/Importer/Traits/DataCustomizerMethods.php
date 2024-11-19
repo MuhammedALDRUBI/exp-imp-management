@@ -28,6 +28,9 @@ trait DataCustomizerMethods
         return $this;
     }
 
+    /**
+     * @todo later
+     */
     protected function singleRowValidationFailed(array $modelData , Throwable $e) : void
     {
         /**
@@ -55,7 +58,8 @@ trait DataCustomizerMethods
     protected function setDataFileContentProcessorProps() : DataFileContentProcessor
     { 
         return $this->dataFileContentProcessor->setFilesProcessor($this->filesProcessor)
-                                              ->setFilePathToProcess($this->uploadedFileStorageRealPath);
+                                              ->setFilePathToProcess($this->uploadedFileTempRealPath);
+                                            //   ->setFilePathToProcess($this->uploadedFileStorageRealPath);
     }
 
     protected function initDataFileContentProcessor() : DataFileContentProcessor
@@ -121,7 +125,7 @@ trait DataCustomizerMethods
 
             $this->successModelfulImportingTransaction();
 
-        }catch (Exception $e)
+        }catch (Throwable $e)
         {
             $this->failedModelImportingTransactrion( $row , $e);
         }
@@ -135,7 +139,12 @@ trait DataCustomizerMethods
         {
             if(array_key_exists($column , $dataRow))
             {
-                $columnsValues[$column] = $dataRow[$column];
+                $value = $dataRow[$column];
+                if(!$value)
+                {
+                    $value = null;
+                }
+                $columnsValues[$column] = $value;
             }
         }
         return $columnsValues;
@@ -149,7 +158,7 @@ trait DataCustomizerMethods
     {
         $this->validateSingleModel($row);
 
-        $fillable = $this->getModelDesiredColumnValues($row);
+        $fillable = $this->getModelDesiredColumnValues($row); 
         if(!empty($fillable))
         {  
            $this->importModel($fillable);
@@ -168,7 +177,7 @@ trait DataCustomizerMethods
      * @throws Exception
      */
     protected function importData() : Importer
-    {  
+    {   
         $this->setModelDesiredColumns();  
         $this->importDataRows();
         return $this;

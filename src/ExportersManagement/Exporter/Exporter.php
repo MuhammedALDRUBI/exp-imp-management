@@ -138,10 +138,10 @@ abstract class Exporter
     }
 
 
-    protected function processDataFilePath(string $DataFileContainerFolderPath) : string
-    {
-        return CustomFileHandler::processFolderPath($DataFileContainerFolderPath) . $this->fileFullName;
-    }
+    // protected function processDataFilePath(string $DataFileContainerFolderPath) : string
+    // {
+    //     return CustomFileHandler::processFolderPath($DataFileContainerFolderPath) . $this->fileFullName;
+    // }
 
     protected function generateFileAssetURL(string $fileName) : string
     {
@@ -157,10 +157,11 @@ abstract class Exporter
      * Returns Final File's Path In storage
      * @throws Exception
      */
-    protected function uploadFinalFile() : string
-    {
-        return $this->filesProcessor->uploadToStorage($this->finalFilePath);
-    }
+    // protected function uploadFinalFile() : string
+    // { 
+    //     dd(file_exists($this->finalFilePath));
+    //     return $this->filesProcessor->uploadToStorage($this->finalFilePath);
+    // }
 
     /**
      * @return string
@@ -170,11 +171,12 @@ abstract class Exporter
     protected function prepareDataFileToUpload() : string
     {
          $this->initExporter()
-                    ->PrepareExporterData()
-                    ->setFilesProcessor();
+              ->PrepareExporterData()
+              ->setFilesProcessor();
 
-        $DataFilePath =  $this->setDataFileToExportedFilesProcessor();
-        return $this->processDataFilePath($DataFilePath);
+        //return DataFile real temp path
+        return $this->uploadDataFileToTempPath();
+        // return $this->processDataFilePath($DataFilePath);
     }
 
     /**
@@ -184,10 +186,12 @@ abstract class Exporter
     public function exportingJobFun() : string
     {
         $this->finalFilePath = $this->prepareDataFileToUpload();
-        $this->uploadFinalFile();
+        $this->filesProcessor->informExportedDataFilesInfoManager($this->finalFilePath);
+        // $this->uploadFinalFile();
         return $this->generateFileAssetURL(
-                    $this->filesProcessor->getFileDefaultName($this->finalFilePath) // geting the name after the child class handled it by setDataFileToExportedFilesProcessor()
-                );
+                                                // geting the name after the child class handled it by setDataFileToExportedFilesProcessor()
+                                                $this->filesProcessor->getFileDefaultName($this->finalFilePath) 
+                                            );
     }
 
 

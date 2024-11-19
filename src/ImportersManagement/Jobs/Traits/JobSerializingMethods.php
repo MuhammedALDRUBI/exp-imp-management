@@ -10,16 +10,16 @@ use Illuminate\Contracts\Auth\Authenticatable;
 trait JobSerializingMethods
 {
     private string $importerClass;
-    protected ?string $importedDataFileStoragePath = null;  
+    protected ?string $importedDataFileTempPath = null;  
     private Authenticatable $notifiable;
 
     /**
-     * @param string $importedDataFileStoragePath
+     * @param string $importedDataFileTempPath
      * @return DataImporterJob
      */
-    public function setImportedDataFileStoragePath(string $importedDataFileStoragePath): DataImporterJob
+    public function setImportedDataFileTempPath(string $importedDataFileTempPath): DataImporterJob
     {
-        $this->importedDataFileStoragePath = $importedDataFileStoragePath;
+        $this->importedDataFileTempPath = $importedDataFileTempPath;
         return $this;
     }
   
