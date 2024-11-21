@@ -16,7 +16,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 trait DataCustomizerMethods
 { 
-    protected string $ModelClass; 
+    protected ?string $ModelClass  = null;
     protected string $modelPrimaryKeyName;
     protected QueryBuilder | Builder | DatabaseQueryBuilder | null $builder = null; 
     protected Collection | LazyCollection | null $DataCollection = null;
@@ -29,15 +29,16 @@ trait DataCustomizerMethods
         $this->request = $request;
         return $this;
     }
-
-
+ 
     /**
      * @param Model $model
      * @return DataCustomizerMethods|Exporter
      */
-    protected function setModelPrimaryKeyName(Model $model): self
+    protected function setModelPrimaryKeyName($modelClass): self
     {
+        $model = new $modelClass;
         $this->modelPrimaryKeyName = $model->getKeyName();
+        unset($model);
         return $this;
     }
 
@@ -45,25 +46,40 @@ trait DataCustomizerMethods
      * @return DataCustomizerMethods|Exporter
      * @throws Exception
      */
-    protected function setModelClass() : self
-    { 
-        $modelClass = $this->getModelClass();
-        if(!class_exists($modelClass)){throw new Exception("The Given Model Class Is Undefined !");}
-
-        $model = new $modelClass;
-        if (!$model instanceof Model)
+    public function setModelClass(string $modelClass) : self
+    {   
+        if(!is_subclass_of($modelClass , Model::class))
         {
-            throw new Exception("The Given Model Class Is Not A Model Instance !");
-        }
-        $this->setModelPrimaryKeyName($model);
-        unset($model);
+            throw new Exception("The passed Model class is not a model type !");
+        } 
+        
+        $this->setModelPrimaryKeyName($modelClass);
 
         $this->ModelClass = $modelClass;
 
         return $this;
     }
 
+    protected function setModelClassOptinally(?string $modelClass = null)
+    {
+        if($modelClass)
+        {
+            $this->setModelClass($modelClass);
+        }
+    }
 
+    public function getModelClass() : ?string
+    {
+        return $this->ModelClass;
+    }
+
+    protected  function requireModelClass() : string
+    {
+        return $this->getModelClass() 
+               ?? 
+               throw new Exception("The model class is not set while it is required to fetch data");
+    }
+  
     protected function applySpatieAllowedFilters() : void
     {
         if($this->builder instanceof QueryBuilder && $this instanceof SupportSpatieAlowedFilters)
@@ -107,11 +123,12 @@ trait DataCustomizerMethods
 
     protected function initEloquentBuilder() : Builder
     {
-        return $this->ModelClass::query();
+        $modelClass = $this->requireModelClass(); 
+        return $modelClass::query();
     }
     protected function initSpatieBuilder() : QueryBuilder
     {
-        return $this->getQueryBuilderClass()::for($this->ModelClass , $this->request);
+        return $this->getQueryBuilderClass()::for($this->requireModelClass() , $this->request);
     }
     /**
      * @return Builder | DatabaseQueryBuilder | QueryBuilder
@@ -120,9 +137,7 @@ trait DataCustomizerMethods
      * if another 
      */
     protected function initQueryBuilder() : Builder | DatabaseQueryBuilder | QueryBuilder
-    {
-        $this->setModelClass();
-
+    { 
         if(is_subclass_of($this->getQueryBuilderClass() , QueryBuilder::class))
         {
             return  $this->initSpatieBuilder();
@@ -226,8 +241,7 @@ trait DataCustomizerMethods
     }
 
     protected function DoesHaveBigData() : bool
-    {
-        return true;
+    { 
         return $this->dataRowsCount > $this->LoadedRowsMaxLimitBeforeDispatchingJob;
     }
  

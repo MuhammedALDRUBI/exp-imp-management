@@ -14,42 +14,54 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class JobDispatcherJSONResponder  extends Responder
 {
-    protected string $exporterClass = ""; 
+    //protected string $exporterClass = ""; 
+    protected Exporter $exporter;
     /**
      * @param Exporter $exporter
      * @return $this
      * @throws Exception
      */
-    public function setExporterClass(Exporter $exporter): self
+    // public function setExporterClass(Exporter $exporter): self
+    // {
+    //     $this->exporterClass = get_class($exporter); 
+    //     return $this;
+    // }
+    public function __construct(Exporter $exporter)
     {
-        $this->exporterClass = get_class($exporter); 
+        $this->setExporter($exporter);
+    }
+    public function setExporter(Exporter $exporter): self
+    {
+        $this->exporter = $exporter;
         return $this;
     }
-    
     protected function dispatchJob(HugeDataExporterJob $job)
     {
         dispatch($job);
     }
 
-    protected function setHugeDataExporterJobProps(HugeDataExporterJob $job)
-    {
-        $job->setDataCollection($this->DataCollection);
-    }
+    // protected function setHugeDataExporterJobProps(HugeDataExporterJob $job)
+    // {
+    //     $job->setDataCollection($this->DataCollection);
+    // }
     /**
      * @return HugeDataExporterJob
      * @throws Exception
      */
     protected function initHugeDataExporterJob() : HugeDataExporterJob
     {  
-        if(!$this->exporterClass){throw new Exception("There Is No Exporter Class Given To Job Object");}
-
-        return  new HugeDataExporterJob($this->exporterClass , request());
+        // if(!$this->exporterClass){throw new Exception("There Is No Exporter Class Given To Job Object");}
+        // if(!$this->exporter){throw new Exception("There Is No Exporter Passed To Job Object");}
+        return  new HugeDataExporterJob( $this->exporter
+            //$this->exporterClass
+        // , request()
+        );
     }
 
     protected function getHugeDataExporterJob() : HugeDataExporterJob
     {
         $job = $this->initHugeDataExporterJob();
-       $this->setHugeDataExporterJobProps($job);
+    //    $this->setHugeDataExporterJobProps($job);
         return $job;
     }
     /**

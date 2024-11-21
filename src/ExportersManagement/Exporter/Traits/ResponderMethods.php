@@ -9,13 +9,13 @@ use ExpImpManagement\ExportersManagement\Responders\StreamingResponder;
 trait ResponderMethods
 {
       
-    protected function setJobDispatcherJSONResponderProps(JobDispatcherJSONResponder $responder )
-    {
-        $responder->setExporterClass($this);
-    }
+    // protected function setJobDispatcherJSONResponderProps(JobDispatcherJSONResponder $responder )
+    // {
+    //     $responder->setExporterClass($this);
+    // }
     protected function getJobDispatcherJSONResponder() : JobDispatcherJSONResponder
     {
-        return new JobDispatcherJSONResponder();
+        return new JobDispatcherJSONResponder($this);
     }
 
     /**
@@ -25,8 +25,8 @@ trait ResponderMethods
     protected function initJobDispatcherJSONResponder() : JobDispatcherJSONResponder
     {
         $responder = $this->getJobDispatcherJSONResponder();
-        $this->setResponderGeneralProps($responder);
-        $this->setJobDispatcherJSONResponderProps($responder);
+        // $this->setResponderGeneralProps($responder);
+        // $this->setJobDispatcherJSONResponderProps($responder);
         return $responder; 
     }
 

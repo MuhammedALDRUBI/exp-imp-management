@@ -21,12 +21,11 @@ class HugeDataExporterJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private Authenticatable $notifiable;
-    private Request $Request;
+    // private Request $Request;
     private array $RequestQueryStringArray = [];
     private array $RequestPostData = [];
-    private Collection | LazyCollection | null $DataCollection = null;
-
-    private string $ExporterClass;
+    // private Collection | LazyCollection | null $DataCollection = null;
+ 
     private Exporter $exporter;
 
     /**
@@ -34,24 +33,25 @@ class HugeDataExporterJob implements ShouldQueue
      * @param Request $request
      * @throws Exception
      */
-    public function __construct(string $ExporterClass , Request $request )
+    public function __construct(Exporter $Exporter )
     {
-        $this->setExporterClass($ExporterClass)->keepRequestParams($request)->setNotifiable();
+        $this->setExporter($Exporter)->keepRequestParams()->setNotifiable();
     }
 
-    public function setDataCollection(Collection | LazyCollection | null $collection) : self
-    {
-        $this->DataCollection = $collection;
-        return $this;
-    }
+    // public function setDataCollection(Collection | LazyCollection | null $collection) : self
+    // {
+    //     $this->DataCollection = $collection;
+    //     return $this;
+    // }
 
     private function updateRequest(Request $request) : Request
     {
         return $request->merge([ ...$this->RequestPostData , ...$this->RequestQueryStringArray] );
     }
 
-    protected function keepRequestParams(Request $request) :self
+    protected function keepRequestParams() :self
     { 
+        $request = request();
         $this->RequestQueryStringArray = $request->query->all();
         $this->RequestPostData = $request->all();
         return $this;
@@ -61,14 +61,14 @@ class HugeDataExporterJob implements ShouldQueue
      * @return $this
      * @throws Exception
      */
-    private function setExporterClass(string $ExporterClass) : self
+    private function setExporter(Exporter $Exporter) : self
     {
-        if(!is_subclass_of($ExporterClass , Exporter::class))
-        {
-            throw new Exception("The Given Exporter Class Is Not Valid Exporter Class !");
-        } 
-        $this->ExporterClass = $ExporterClass ;
-
+        // if(!is_subclass_of($ExporterClass , ::class))
+        // {
+        //     throw new Exception("The Given Exporter Class Is Not Valid Exporter Class !");
+        // } 
+        // $this->ExporterClass = $ExporterClass ;
+        $this->exporter = $Exporter;
         return $this;
     }
 
@@ -78,11 +78,11 @@ class HugeDataExporterJob implements ShouldQueue
         return $this;
     }
 
-    private function setExporter() : self
-    {
-        $this->exporter = new $this->ExporterClass;
-        return $this;
-    }
+    // private function setExporter() : self
+    // {
+    //     $this->exporter = new $this->ExporterClass;
+    //     return $this;
+    // }
 
     protected function NotifyExportedData(string $ExportedDataDownloadingPath) : self
     {
@@ -96,10 +96,9 @@ class HugeDataExporterJob implements ShouldQueue
      * @throws Exception
      */
     public function handle(Request $request) : void
-    {
-        $this->setExporter();
+    {  
         $this->exporter->useRequest( $this->updateRequest($request) );
-        $this->exporter->useDataCollection($this->DataCollection);
+        // $this->exporter->useDataCollection($this->DataCollection);
         $ExportedDataDownloadingPath = $this->exporter->exportingJobFun();  
         $this->NotifyExportedData($ExportedDataDownloadingPath);
     }

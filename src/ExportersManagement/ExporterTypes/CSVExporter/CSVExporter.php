@@ -7,33 +7,40 @@ use ExpImpManagement\ExportersManagement\ExporterTypes\CSVExporter\Responders\CS
 use ExpImpManagement\ExportersManagement\FinalDataArrayProcessors\DataArrayProcessor; 
 use ExpImpManagement\ExportersManagement\Responders\StreamingResponder;
 use Exception;
-use ExpImpManagement\ExportersManagement\Exporter\Exporter;
-use ExpImpManagement\ExportersManagement\Interfaces\SupportSpatieAlowedFilters;
+use ExpImpManagement\ExportersManagement\Exporter\Exporter; 
 use ExpImpManagement\Interfaces\PixelExcelExpImpLib;
 use OpenSpout\Common\Exception\InvalidArgumentException;
 use OpenSpout\Common\Exception\IOException;
 use OpenSpout\Common\Exception\UnsupportedTypeException;
 use OpenSpout\Writer\Exception\WriterNotOpenedException; 
 
-abstract class CSVExporter extends Exporter implements SupportSpatieAlowedFilters
+class CSVExporter extends Exporter
 {
     protected ?PixelExcelExpImpLib $pixelExpImpLib = null;
+    
+    /** * @var callable $FinalDataArrayMappingFun */
+    protected  $FinalDataArrayMappingFun = null;
 
-    public function __construct()
+    public function __construct(?string $modelClass = null) 
     {
-        parent::__construct();
-        $this->initPixelExcelExpImpLib();
+        parent::__construct( $modelClass) ;
+        $this->initPixelExcelExpImpLib(); 
+    }
+
+    public function __wakeup()
+    { 
+        $this->initPixelExcelExpImpLib(); 
     }
 
     protected function initPixelExcelExpImpLib() : void
     {
         $this->pixelExpImpLib = app()->make(PixelExcelExpImpLib::class );
     }
-    /** * @var callable $FinalDataArrayMappingFun */
-    protected  $FinalDataArrayMappingFun = null;
     /**
      * @param callable $mappingFun
      * @return $this
+     * 
+     * @todo need to serlize this callback in some way
      */
     public function mapOnFinalDataArray(callable $mappingFun) : self
     {

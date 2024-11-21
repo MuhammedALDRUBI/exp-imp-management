@@ -10,16 +10,18 @@ use ExpImpManagement\ExportersManagement\Exporter\Traits\ExporterAbstractMethods
 use ExpImpManagement\ExportersManagement\Responders\Responder;
 use CustomFileSystem\CustomFileHandler;
 use Exception;
+use ExpImpManagement\ExportersManagement\Exporter\Traits\ExporterSerilizing;
 use ExpImpManagement\ExportersManagement\Exporter\Traits\ResponderMethods; 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use JsonSerializable;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-abstract class Exporter
+abstract class Exporter  implements JsonSerializable
 {
-    use DataCustomizerMethods  , ExporterAbstractMethods , ResponderMethods;
+    use DataCustomizerMethods  , ExporterAbstractMethods , ResponderMethods , ExporterSerilizing;
 
     /**
      * @var string
@@ -32,6 +34,7 @@ abstract class Exporter
      * With Extension
      */
     protected string $fileFullName ="" ;
+    protected bool $outoutUniqueDocumentTitle = true;
 
     /**
      * @var string
@@ -57,7 +60,10 @@ abstract class Exporter
     /**
      * @throws Exception
      */
-    public function __construct() {}
+    public function __construct(?string $modelClass = null) 
+    {
+        $this->setModelClassOptinally($modelClass);
+    }
 
     /**
      * @return Responder
@@ -72,27 +78,66 @@ abstract class Exporter
         return $this->initStreamingResponder();
     }
 
+    public function useTheSameDocumentTitle() : self
+    {
+        $this->outoutUniqueDocumentTitle = false;
+        return $this;
+    }
+
+    public function useUniqueDocumentTitle() :  self
+    {
+        $this->outoutUniqueDocumentTitle = true;
+        return $this;
+    }
+
     public function composeFileFullName() : string
     {
         return $this->fileName . "." . $this->getDataFileExtension();
     }
+
+    protected function setFileFullName() : self
+    { 
+        $this->fileFullName =  $this->composeFileFullName(); 
+        return $this;
+    }
+    
     /**
      * return Only File Name (Document Title + Date  , Doesn't Contain The Extension )
      *To Get Full name With Extension use $this->fileName
      * @return string
      */
-    public function composeFileName() : string
+    public function composeFileName(string $documentTitle) : string
     {
-        return Str::slug( $this->getDocumentTitle() , "_") .  date("_Y_m_d_his") ;
+        $name = $this->sanitizeFileCustomName($documentTitle);
+        return $this->outoutUniqueDocumentTitle 
+               ? 
+               Str::slug( $name , "_") .  date("_Y_m_d_his") 
+               :
+               $name;
+    }
+
+    protected function sanitizeFileCustomName(string $name) : string
+    {
+        return explode("." , $name)[0];
     }
 
     /**
+     * @param string $name
+     * @param string $extension
+     * @return $this
+     * @throws Exception 
+     */
+    protected function setFileName(string $documentTitle ) : self
+    {
+        $this->fileName =  $this->composeFileName($documentTitle) ;
+        return $this;
+    }
+    /**
      * @return $this
      */
-    protected function setDefaultFileName() : void
+    protected function setFileNames(string $documentTitle) : void
     {
-        $this->fileName =  $this->composeFileName() ;
-        $this->fileFullName =  $this->composeFileFullName(); 
+        $this->setFileName($documentTitle)->setFileFullName();
     }
 
     /**
@@ -100,9 +145,7 @@ abstract class Exporter
      * @throws Exception
      */
     protected function initExporter() : self
-    {
-        $this->setDefaultFileName();
-
+    { 
         if( $this->DataCollection == null) //if there is a DataCollection ... it is set manually in the controller context class ... no need to fetch it twice
         { 
             $this->prepareQueryBuilder();
@@ -111,21 +154,7 @@ abstract class Exporter
         return $this;
     }
 
-    /**
-     * @param string $name
-     * @param string $extension
-     * @return $this
-     * @throws Exception
-     * This Method is used to change file name from controller context ... but it is mainly changed by child class
-     * by getFileName method in the initExporter method of object
-     */
-    public function setCustomFileName(string $name , string $extension) : self
-    {
-        $this->fileName = $name  ;
-        $this->fileFullName = $name . "." . $extension;
-        return $this;
-    }
-
+ 
     /**
      * @return $this
      * @throws JsonException
@@ -170,12 +199,12 @@ abstract class Exporter
      */
     protected function prepareDataFileToUpload() : string
     {
-         $this->initExporter()
-              ->PrepareExporterData()
-              ->setFilesProcessor();
-
+        
         //return DataFile real temp path
-        return $this->uploadDataFileToTempPath();
+         return $this->initExporter()
+                     ->PrepareExporterData()
+                     ->setFilesProcessor()
+                     ->uploadDataFileToTempPath();
         // return $this->processDataFilePath($DataFilePath);
     }
 
@@ -193,15 +222,15 @@ abstract class Exporter
                                                 $this->filesProcessor->getFileDefaultName($this->finalFilePath) 
                                             );
     }
-
-
+ 
     /**
      * @return JsonResponse|StreamedResponse
      * @throws JsonException | Exception
      */
-    public function export() : JsonResponse | StreamedResponse
+    public function export(string $documentTitle) : JsonResponse | StreamedResponse
     {
         try {
+            $this->setFileNames($documentTitle);
             $this->initExporter();
             return $this->getConvenientResponder()->respond(); 
         }catch(Exception $e)

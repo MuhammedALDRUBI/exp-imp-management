@@ -5,8 +5,7 @@ namespace ExpImpManagement\ExportersManagement\ExporterTypes\PDFExporter;
 use ExpImpManagement\ExportersManagement\Exporter\Exporter; 
 use ExpImpManagement\ExportersManagement\ExporterTypes\PDFExporter\Responders\PDFStreamingResponder;
 use ExpImpManagement\ExportersManagement\Responders\StreamingResponder;
-use Exception;
-use ExpImpManagement\ExportersManagement\Interfaces\SupportSpatieAlowedFilters;
+use Exception; 
 use Mpdf\MpdfException;
 use PixelDomPdf\Interfaces\PixelPdfNeedsProvider; 
 use Illuminate\Contracts\View\View;
@@ -14,21 +13,59 @@ use Illuminate\Contracts\View\View;
 /**
  * @prop PDFStreamingResponder |  $responder
  */
-abstract class PDFExporter extends Exporter  implements SupportSpatieAlowedFilters
+class PDFExporter extends Exporter
 { 
 
     protected ?PixelPdfNeedsProvider $pdfLib = null; 
+    protected ?string $viewTemplateRelativePath = null;
     /**
      * @throws MpdfException
      * @throws Exception
      */
-    function __construct()
+    public function __construct(?string $modelClass = null) 
     {
-        parent::__construct();
+        parent::__construct( $modelClass) ;
         $this->initPDFLib();
     }
 
-    abstract protected function getViewTemplateRelativePath() : string;
+    protected function setUnserlizedProps($data)
+    {
+        parent::setUnserlizedProps($data);
+        $this->setViewTemplateRelativePath($data["viewTemplateRelativePath"]);
+    }
+
+    public function __wakeup()
+    { 
+        $this->initPDFLib();
+    }
+    protected static function DoesItHaveMissedSerlizedProps($data)
+    {
+        return parent::DoesItHaveMissedSerlizedProps($data) || !array_key_exists("viewTemplateRelativePath" , $data);
+    }
+
+    protected function getSerlizingProps() : array
+    {
+        $parentProps = parent::getSerlizingProps();
+        $parentProps[] = "viewTemplateRelativePath";
+        return $parentProps;
+    }
+
+    public function setViewTemplateRelativePath(string $viewTemplateRelativePath) : self
+    {
+        $this->viewTemplateRelativePath = $viewTemplateRelativePath;
+        return $this;
+    }
+
+    public function getViewTemplateRelativePath() : ?string
+    {
+        return $this->viewTemplateRelativePath;
+    }
+
+    protected function requireViewTemplateRelativePath() : string
+    {
+        return $this->getViewTemplateRelativePath() ??
+               throw new Exception("The view template path is not set while it is required for pdf rendering");
+    }
 
     /**
      * @return $this
@@ -44,7 +81,7 @@ abstract class PDFExporter extends Exporter  implements SupportSpatieAlowedFilte
      */
     protected function getViewToRender() : View
     {
-        return view($this->getViewTemplateRelativePath() , ["data" => $this->DataCollection ]);
+        return view($this->requireViewTemplateRelativePath() , ["data" => $this->DataCollection ]);
     }
     
     protected function passViewToPDFLib() : self
@@ -62,6 +99,8 @@ abstract class PDFExporter extends Exporter  implements SupportSpatieAlowedFilte
     protected function PrepareExporterData() : self
     {
         parent::PrepareExporterData();
+
+        //passing it after data is set manually or fetched by PrepareExporterData parent's method
         return $this->passViewToPDFLib();
     }
 
