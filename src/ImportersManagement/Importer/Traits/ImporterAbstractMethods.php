@@ -5,11 +5,7 @@ namespace ExpImpManagement\ImportersManagement\Importer\Traits;
 use ExpImpManagement\ImportersManagement\DataFilesContentProcessors\DataFileContentProcessor;
 
 trait ImporterAbstractMethods
-{
-    abstract protected function getModelClass() : string;
-    abstract protected function getDataValidationRequestForm() : string;
-
-
+{ 
     /** 
      * @return string
      */

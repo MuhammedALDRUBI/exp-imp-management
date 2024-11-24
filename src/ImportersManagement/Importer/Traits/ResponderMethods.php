@@ -7,10 +7,7 @@ use ExpImpManagement\ImportersManagement\Responders\Responder;
 use Exception;
 
 trait ResponderMethods
-{
-
-    protected ?Responder $responder = null;
-
+{ 
     protected function getJobDispatcherResponder() :  JobDispatcherJSONResponder
     {
         return new JobDispatcherJSONResponder();
@@ -21,23 +18,17 @@ trait ResponderMethods
      */
     protected function setResponderProps(JobDispatcherJSONResponder $responder) : void
     {
-        $responder->setImporterClass($this)
-                  ->setImportedDataFileTempPath($this->uploadedFileTempRealPath );
-                //   ->setImportedDataFileStoragePath($this->uploadedFileStorageRelevantPath );
+        $responder->setImporter($this); 
     }
     /**
      * @throws Exception
      */
     protected function initResponder() : Responder
-    {
-        if(!$this->responder)
-        {
+    { 
             $responder = $this->getJobDispatcherResponder();
 
             $this->setResponderProps($responder);
 
-            $this->responder = $responder;
-        }
-        return $this->responder;
+            return $responder; 
     }
 }

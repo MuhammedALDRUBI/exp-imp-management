@@ -4,15 +4,26 @@ namespace ExpImpManagement\ImportersManagement\Importer\Traits;
 
 use CRUDServices\ValidationManagers\ManagerTypes\StoringValidationManager;
 use ExpImpManagement\ImportersManagement\RequestForms\UploadedFileRequestForm; 
-use Illuminate\Http\UploadedFile;
-use Throwable;  
+use Illuminate\Http\UploadedFile; 
 
 trait ValidationMethods
 {
 
     protected ?StoringValidationManager $validationManager = null;
-    protected string $DataValidationRequestForm;
+    protected string $dataValidationRequestFormClass;
 
+    protected function getDataValidationRequestFormClass() : string
+    {
+        return $this->dataValidationRequestFormClass;
+    }
+
+    public function setDataValidationRequestFormClass(string $requestFormClass)  : self
+    {
+       //there is no need to check the type of class ... the ValidatorLib package will throw an exception if the the type 
+       //is not compatiable with it
+       $this->dataValidationRequestFormClass = $requestFormClass;
+        return $this;
+    }
 
     protected function getUploadedFileValidationRequestFormClass() : string
     {
@@ -45,23 +56,10 @@ trait ValidationMethods
                                 ->startGeneralValidation();
         return $this;
     }
-
-    // protected function validateDataGenerally() : void
-    // {
-    //     $this->validationManager->setBaseRequestFormClass($this->getDataValidationRequestForm())
-    //                             ->setValidatorData($this->ImportedDataArray)
-    //                             ->startGeneralValidation();
-    // }
-
+ 
     protected function validateSingleModel(array $modelData) : void
     {
-        try
-        {
-            $this->validationManager->validateSingleModelRowKeys($modelData);
-
-        }catch(Throwable $e)
-        {
-            $this->singleRowValidationFailed($modelData , $e);
-        }
+        $this->validationManager->setBaseRequestFormClass($this->getDataValidationRequestForm())
+                                ->validateSingleModelRowKeys($modelData);
     }
 }

@@ -3,31 +3,18 @@
 namespace ExpImpManagement\ExportersManagement\Exporter\Traits;
 
 use ExpImpManagement\ExportersManagement\Responders\JobDispatcherJSONResponder;
-use ExpImpManagement\ExportersManagement\Responders\Responder;
 use ExpImpManagement\ExportersManagement\Responders\StreamingResponder;
 
 trait ResponderMethods
 {
-      
-    // protected function setJobDispatcherJSONResponderProps(JobDispatcherJSONResponder $responder )
-    // {
-    //     $responder->setExporterClass($this);
-    // }
-    protected function getJobDispatcherJSONResponder() : JobDispatcherJSONResponder
-    {
-        return new JobDispatcherJSONResponder($this);
-    }
-
+   
     /**
      * @return JobDispatcherJSONResponder
      * @throws JsonException
      */
     protected function initJobDispatcherJSONResponder() : JobDispatcherJSONResponder
     {
-        $responder = $this->getJobDispatcherJSONResponder();
-        // $this->setResponderGeneralProps($responder);
-        // $this->setJobDispatcherJSONResponderProps($responder);
-        return $responder; 
+        return new JobDispatcherJSONResponder($this); 
     }
 
     /**
@@ -35,6 +22,7 @@ trait ResponderMethods
      */
     protected function setStreamingResponderProps(StreamingResponder $responder) : void
     {
+        $responder->setDataCollectionToExport($this->DataCollection);
         $responder->setFileFullName($this->fileFullName);;
     }
 
@@ -45,19 +33,9 @@ trait ResponderMethods
     protected function initStreamingResponder() : StreamingResponder
     {
         $this->PrepareExporterData();
-        $responder = $this->getStreamingResponder();
-        $this->setResponderGeneralProps($responder);
+        $responder = $this->getStreamingResponder(); 
         $this->setStreamingResponderProps($responder);
         return  $responder; 
     }
-
-    /**
-     * Overwrite it on need in child class 
-     */
-    protected function setResponderGeneralProps(Responder $responder) : void
-    {
-        $responder->setDataCollectionToExport($this->DataCollection);
-    }
-
-
+ 
 }

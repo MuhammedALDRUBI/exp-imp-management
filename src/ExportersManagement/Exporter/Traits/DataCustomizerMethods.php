@@ -5,7 +5,6 @@ namespace ExpImpManagement\ExportersManagement\Exporter\Traits;
 
 use ExpImpManagement\ExportersManagement\Exporter\Exporter;
 use Exception;
-use ExpImpManagement\ExportersManagement\Interfaces\SupportSpatieAlowedFilters;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +22,7 @@ trait DataCustomizerMethods
     protected int $LoadedRowsMaxLimitBeforeDispatchingJob = 5; 
     protected int $dataRowsCount; 
     protected ?Request $request = null; // needed to save request filters and payloads values to job object on needed to run job
+    protected array $spatieBuilderAllowedFilters = [];
  
     public function useRequest(Request $request) : self
     {
@@ -30,6 +30,16 @@ trait DataCustomizerMethods
         return $this;
     }
  
+    public function getSpatieBuilderAllowedFilters() : array
+    {
+        return $this->spatieBuilderAllowedFilters ;
+    }
+
+    public function setSpatieBuilderAllowedFilters(array $allowedFilters) : self
+    {
+       return $this->spatieBuilderAllowedFilters = $allowedFilters;
+    }
+
     /**
      * @param Model $model
      * @return DataCustomizerMethods|Exporter
@@ -82,11 +92,12 @@ trait DataCustomizerMethods
   
     protected function applySpatieAllowedFilters() : void
     {
-        if($this->builder instanceof QueryBuilder && $this instanceof SupportSpatieAlowedFilters)
+        if($this->builder instanceof QueryBuilder && !empty( $this->getSpatieBuilderAllowedFilters() ))
         {
-            $this->builder->allowedFilters( $this->getAllowedFilters() );
+            $this->builder->allowedFilters( $this->getSpatieBuilderAllowedFilters() );
         }
     }
+
     protected function getPixelDefaultScopes() : array
     {
         return ['datesFiltering' , 'customOrdering'];
@@ -130,11 +141,11 @@ trait DataCustomizerMethods
     {
         return $this->getQueryBuilderClass()::for($this->requireModelClass() , $this->request);
     }
+
     /**
      * @return Builder | DatabaseQueryBuilder | QueryBuilder
      * @throws Exception
-     * 
-     * if another 
+     *  
      */
     protected function initQueryBuilder() : Builder | DatabaseQueryBuilder | QueryBuilder
     { 
@@ -227,7 +238,7 @@ trait DataCustomizerMethods
      * by setDefaultData method in the constructor of object
      */
     public function useDataCollection( Collection | LazyCollection|null $DataCollection = null ) : self
-    {
+    { 
         if($DataCollection)
         {
             $this->setNeededDataCount($DataCollection->count())->setDataCollection($DataCollection);

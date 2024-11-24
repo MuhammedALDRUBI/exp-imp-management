@@ -8,20 +8,19 @@ use ExpImpManagement\ExportersManagement\ExportedFilesProcessors\ExportedFilesPr
 use ExpImpManagement\ExportersManagement\Exporter\Traits\DataCustomizerMethods;
 use ExpImpManagement\ExportersManagement\Exporter\Traits\ExporterAbstractMethods;  
 use ExpImpManagement\ExportersManagement\Responders\Responder;
-use CustomFileSystem\CustomFileHandler;
 use Exception;
 use ExpImpManagement\ExportersManagement\Exporter\Traits\ExporterSerilizing;
+use ExpImpManagement\ExportersManagement\Exporter\Traits\FileNameProccessing;
 use ExpImpManagement\ExportersManagement\Exporter\Traits\ResponderMethods; 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Str;
 use JsonSerializable;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 abstract class Exporter  implements JsonSerializable
 {
-    use DataCustomizerMethods  , ExporterAbstractMethods , ResponderMethods , ExporterSerilizing;
+    use DataCustomizerMethods  , ExporterAbstractMethods , ResponderMethods , ExporterSerilizing , FileNameProccessing;
 
     /**
      * @var string
@@ -38,11 +37,10 @@ abstract class Exporter  implements JsonSerializable
 
     /**
      * @var string
-     * Final File Which Be Uploaded To Storage (Data File OR Zip File If it Needs To A Compression)
+     * Final File path in temp folder 
      */
     protected string $finalFilePath = "";
-
-    protected string $title;
+ 
     protected ?ExportedFilesProcessor $filesProcessor = null; 
 
 
@@ -77,69 +75,6 @@ abstract class Exporter  implements JsonSerializable
         } 
         return $this->initStreamingResponder();
     }
-
-    public function useTheSameDocumentTitle() : self
-    {
-        $this->outoutUniqueDocumentTitle = false;
-        return $this;
-    }
-
-    public function useUniqueDocumentTitle() :  self
-    {
-        $this->outoutUniqueDocumentTitle = true;
-        return $this;
-    }
-
-    public function composeFileFullName() : string
-    {
-        return $this->fileName . "." . $this->getDataFileExtension();
-    }
-
-    protected function setFileFullName() : self
-    { 
-        $this->fileFullName =  $this->composeFileFullName(); 
-        return $this;
-    }
-    
-    /**
-     * return Only File Name (Document Title + Date  , Doesn't Contain The Extension )
-     *To Get Full name With Extension use $this->fileName
-     * @return string
-     */
-    public function composeFileName(string $documentTitle) : string
-    {
-        $name = $this->sanitizeFileCustomName($documentTitle);
-        return $this->outoutUniqueDocumentTitle 
-               ? 
-               Str::slug( $name , "_") .  date("_Y_m_d_his") 
-               :
-               $name;
-    }
-
-    protected function sanitizeFileCustomName(string $name) : string
-    {
-        return explode("." , $name)[0];
-    }
-
-    /**
-     * @param string $name
-     * @param string $extension
-     * @return $this
-     * @throws Exception 
-     */
-    protected function setFileName(string $documentTitle ) : self
-    {
-        $this->fileName =  $this->composeFileName($documentTitle) ;
-        return $this;
-    }
-    /**
-     * @return $this
-     */
-    protected function setFileNames(string $documentTitle) : void
-    {
-        $this->setFileName($documentTitle)->setFileFullName();
-    }
-
     /**
      * @return $this
      * @throws Exception
@@ -165,13 +100,7 @@ abstract class Exporter  implements JsonSerializable
     {
         return $this->setDefaultDataCollection();
     }
-
-
-    // protected function processDataFilePath(string $DataFileContainerFolderPath) : string
-    // {
-    //     return CustomFileHandler::processFolderPath($DataFileContainerFolderPath) . $this->fileFullName;
-    // }
-
+ 
     protected function generateFileAssetURL(string $fileName) : string
     {
         return URL::temporarySignedRoute(
@@ -180,32 +109,21 @@ abstract class Exporter  implements JsonSerializable
                      ["fileName" => $fileName]
                 );
     }
-
-    /**
-     * @return string
-     * Returns Final File's Path In storage
-     * @throws Exception
-     */
-    // protected function uploadFinalFile() : string
-    // { 
-    //     dd(file_exists($this->finalFilePath));
-    //     return $this->filesProcessor->uploadToStorage($this->finalFilePath);
-    // }
-
+ 
     /**
      * @return string
      * @throws JsonException
      * @throws Exception
+     * 
+     * 
+     * return DataFile real temp path
      */
     protected function prepareDataFileToUpload() : string
-    {
-        
-        //return DataFile real temp path
+    { 
          return $this->initExporter()
                      ->PrepareExporterData()
                      ->setFilesProcessor()
-                     ->uploadDataFileToTempPath();
-        // return $this->processDataFilePath($DataFilePath);
+                     ->uploadDataFileToTempPath(); 
     }
 
     /**
@@ -215,8 +133,8 @@ abstract class Exporter  implements JsonSerializable
     public function exportingJobFun() : string
     {
         $this->finalFilePath = $this->prepareDataFileToUpload();
-        $this->filesProcessor->informExportedDataFilesInfoManager($this->finalFilePath);
-        // $this->uploadFinalFile();
+        $this->filesProcessor->informExportedDataFilesInfoManager($this->finalFilePath); 
+
         return $this->generateFileAssetURL(
                                                 // geting the name after the child class handled it by setDataFileToExportedFilesProcessor()
                                                 $this->filesProcessor->getFileDefaultName($this->finalFilePath) 

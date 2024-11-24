@@ -10,65 +10,37 @@ use Illuminate\Support\Facades\Response;
 
 class JobDispatcherJSONResponder  extends Responder
 {
-    protected ?string $importerClass = null;
-    protected ?string $uploadedFileTempRealPath = null; 
-    protected ?DataImporterJob $job = null;
+    protected ?Importer $importer = null;
 
     /**
      * @return $this
      * @throws Exception
      */
-    protected function initJob() : self
+    protected function initJob() : DataImporterJob
     {
-        if($this->job)
+        
+        if(!$this->importer)
         {
-            return $this;
+            throw new Exception("There Is No Importer Passed To Job Object");
         }
-        if(!$this->importerClass)
-        {
-            throw new Exception("There Is No Importer Class Given To Job Object");
-        }
-
-        if(!$this->uploadedFileTempRealPath)
-        {
-             throw new Exception("The Imported File Path Is Not Passed To JobDispatcherJSONResponder");
-        }
-
-        $this->job = new DataImporterJob($this->importerClass );
-        return $this;
+        
+        return new DataImporterJob($this->importer);
     }
 
-    /**
-     * @param Importer $importer
-     * @return $this
-     * @throws Exception
-     */
-    public function setImporterClass(Importer $importer): self
+    public function setImporter(Importer $importer): self
     {
-        $this->importerClass = get_class($importer); 
+        $this->importer = $importer; 
         return $this;
     }
-
-    /**
-     * @param string $importedDataFileStoragePath
-     * @return $this
-     * @throws Exception
-     */
-    public function setImportedDataFileTempPath(string $uploadedFileTempRealPath  ): self
-    {
-        $this->uploadedFileTempRealPath = $uploadedFileTempRealPath;
-        return $this;
-    }
- 
+    
     /**
      * @return JsonResponse
      */
     public function respond(): JsonResponse
     {
         
-        $this->initJob();
-        $this->job->setImportedDataFileTempPath($this->uploadedFileTempRealPath);
-        dispatch($this->job);
+        $job = $this->initJob();
+        dispatch($job);
         return Response::success([] , ["Your Data File Has Been Uploaded Successfully ! , You Will Receive Your Request Result By Mail Message On Your Email !"]);
     }
 

@@ -15,39 +15,22 @@ use OpenSpout\Common\Exception\UnsupportedTypeException;
 use OpenSpout\Writer\Exception\WriterNotOpenedException; 
 
 class CSVExporter extends Exporter
-{
+{  
     protected ?PixelExcelExpImpLib $pixelExpImpLib = null;
-    
-    /** * @var callable $FinalDataArrayMappingFun */
-    protected  $FinalDataArrayMappingFun = null;
-
-    public function __construct(?string $modelClass = null) 
+     
+ 
+    protected function initExporter() : self
     {
-        parent::__construct( $modelClass) ;
+        parent::initExporter();
         $this->initPixelExcelExpImpLib(); 
-    }
-
-    public function __wakeup()
-    { 
-        $this->initPixelExcelExpImpLib(); 
+        return $this;
     }
 
     protected function initPixelExcelExpImpLib() : void
     {
         $this->pixelExpImpLib = app()->make(PixelExcelExpImpLib::class );
     }
-    /**
-     * @param callable $mappingFun
-     * @return $this
-     * 
-     * @todo need to serlize this callback in some way
-     */
-    public function mapOnFinalDataArray(callable $mappingFun) : self
-    {
-        $this->FinalDataArrayMappingFun = $mappingFun;
-        return $this;
-    } 
-
+      
     /**
      * @return DataCustomizerMethods|Exporter
      * @throws Exception
@@ -77,8 +60,7 @@ class CSVExporter extends Exporter
     protected function initFinalDataArrayProcessor() : DataArrayProcessor
     {  
         return $this->getFinalDataArrayProcessor()
-                    ->setModelDesiredFinalDefaultColumnsArray($this->getModelDesiredFinalColumns())
-                    ->setFinalDataArrayMappingFun($this->FinalDataArrayMappingFun); 
+                    ->setModelDesiredFinalDefaultColumnsArray($this->getModelDesiredFinalColumns()) ; 
     }
 
     protected function PrepareExporterData() : self

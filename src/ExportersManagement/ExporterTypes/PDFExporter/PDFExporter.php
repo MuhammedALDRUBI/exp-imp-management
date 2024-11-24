@@ -5,7 +5,9 @@ namespace ExpImpManagement\ExportersManagement\ExporterTypes\PDFExporter;
 use ExpImpManagement\ExportersManagement\Exporter\Exporter; 
 use ExpImpManagement\ExportersManagement\ExporterTypes\PDFExporter\Responders\PDFStreamingResponder;
 use ExpImpManagement\ExportersManagement\Responders\StreamingResponder;
-use Exception; 
+use Exception;
+use ExpImpManagement\ExportersManagement\ExporterTypes\PDFExporter\Traits\PDFExporterSerilizing;
+use ExpImpManagement\ExportersManagement\Interfaces\SelfConstructablePDFExporter;
 use Mpdf\MpdfException;
 use PixelDomPdf\Interfaces\PixelPdfNeedsProvider; 
 use Illuminate\Contracts\View\View;
@@ -16,38 +18,23 @@ use Illuminate\Contracts\View\View;
 class PDFExporter extends Exporter
 { 
 
+    use PDFExporterSerilizing;
+
     protected ?PixelPdfNeedsProvider $pdfLib = null; 
     protected ?string $viewTemplateRelativePath = null;
-    /**
-     * @throws MpdfException
-     * @throws Exception
-     */
-    public function __construct(?string $modelClass = null) 
+ 
+    protected function initExporter() : self
     {
-        parent::__construct( $modelClass) ;
+        parent::initExporter();
+
+        if($this instanceof SelfConstructablePDFExporter)
+        {
+            $templatePath = $this->getViewRelevantPathForSelfConstructing();
+            $this->setViewTemplateRelativePath($templatePath);
+        }
+
         $this->initPDFLib();
-    }
-
-    protected function setUnserlizedProps($data)
-    {
-        parent::setUnserlizedProps($data);
-        $this->setViewTemplateRelativePath($data["viewTemplateRelativePath"]);
-    }
-
-    public function __wakeup()
-    { 
-        $this->initPDFLib();
-    }
-    protected static function DoesItHaveMissedSerlizedProps($data)
-    {
-        return parent::DoesItHaveMissedSerlizedProps($data) || !array_key_exists("viewTemplateRelativePath" , $data);
-    }
-
-    protected function getSerlizingProps() : array
-    {
-        $parentProps = parent::getSerlizingProps();
-        $parentProps[] = "viewTemplateRelativePath";
-        return $parentProps;
+        return $this;
     }
 
     public function setViewTemplateRelativePath(string $viewTemplateRelativePath) : self

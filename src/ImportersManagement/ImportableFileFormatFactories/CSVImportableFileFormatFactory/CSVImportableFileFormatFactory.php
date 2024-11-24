@@ -1,10 +1,13 @@
 <?php
 
-namespace ExpImpManagement\ImportersManagement\ImportableFileFormatFactories;
+namespace ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\CSVImportableFileFormatFactory;
 
+use ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\CSVImportableFileFormatFactory\Traits\CSVImportableFileFormatFactorySerilizing;
 use ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\FormatColumnInfoComponents\CSVFormatColumnInfoComponent;
+use ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\ImportableFileFormatFactory;
 use ExpImpManagement\Interfaces\PixelExcelFormatFactoryLib;
 use Illuminate\Support\Collection;
+use JsonSerializable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithEvents;
@@ -16,11 +19,13 @@ use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 abstract class CSVImportableFileFormatFactory 
-               extends ImportableFileFormatFactory 
-               implements FromCollection , WithStrictNullComparison, WithEvents, WithHeadings, WithColumnWidths, WithStyles
+               extends ImportableFileFormatFactory
+               implements FromCollection , WithStrictNullComparison, WithEvents, WithHeadings, WithColumnWidths, WithStyles , JsonSerializable
 {
  
-    protected ?Collection $dataToManuallyChange = null;
+    use CSVImportableFileFormatFactorySerilizing , CSVImportableFileFormatFactorySerilizing;
+
+    protected ?Collection $formatDataCollection = null;
     protected string $fileName;
     protected  string $writerType = "Csv";
     protected array $headers = [];
@@ -32,15 +37,27 @@ abstract class CSVImportableFileFormatFactory
 
     public function __construct(string $fileName, array $headers = [])
     { 
-        $this->fileName = $this->getValidFileName($fileName) ;
-        $this->headers = $headers;
-        $this->setValidColumnFormatInfoCompoenents();
+        $this->setFileName($fileName)->setHeaders($headers)->setValidColumnFormatInfoCompoenents()->setFormatDefaultCollection();
     }
+
+    public function setHeaders(array $headers = []) : self
+    {
+        $this->headers = $headers;
+        return $this;
+    }
+
+    public function setFileName(string $fileName) : self
+    {
+        $this->fileName = $this->getValidFileName($fileName) ;
+        return $this;
+    }
+
     protected function getValidFileName(string $fileName) : string
     {
         $nameParts = explode("." , $fileName);
         return $nameParts[0] . ".csv";
     }
+
     protected function initPixelExcelFormatFactoryLib() : PixelExcelFormatFactoryLib
     {
         return  app()->make(PixelExcelFormatFactoryLib::class);   
@@ -58,24 +75,53 @@ abstract class CSVImportableFileFormatFactory
 
     public function collection()
     {
-        return $this->dataToManuallyChange ?? collect();
+        return $this->formatDataCollection ;
     }
+
+    protected function getHeadingsKeysArray() : array
+    {
+        $headings = [];
+
+        foreach($this->headings() as $heading)
+        {
+            $headings[$heading] = null;
+        }
+        return $headings;
+    }
+
     protected function getValidSortedData(Collection $data) : Collection
     {
-        //must return the values by sorting its keys based on headings sorttinh style
-        return $data;
+        //must return the values by sorting its keys based on headings sorting style
+        $headings = $this->getHeadingsKeysArray();
+
+        return $data->map(function ($item) use ($headings) 
+                   {
+                        // Filter keys based on headings and reorder them
+                        return  array_merge(
+                                                            $headings, // Create an array with headings as keys to preserve order
+                                                            array_intersect_key($item, $headings) // Filter keys
+                                                        );
+                   });
     }
-    public function setDataFileToManuallyChange(array | Collection $data ) : self
+
+    protected function setFormatDefaultCollection() : void
     {
+        $this->setDataFileToManuallyChange( [] );
+    }
+
+    public function setDataFileToManuallyChange(array | Collection $data ) : self
+    { 
         if(is_array($data))
         {
             $data = collect($data);
         }
-        $this->dataToManuallyChange = $this->getValidSortedData($data);
+        
+        $this->formatDataCollection = $this->getValidSortedData($data);
+
         return $this;
     }
 
-    protected function setValidColumnFormatInfoCompoenents() : void
+    protected function setValidColumnFormatInfoCompoenents() : self
     {
         $this->validColumnFormatInfoCompoenents =  array_filter(
                                                                 $this->getColumnFormatInfoCompoenents() ,
@@ -83,6 +129,7 @@ abstract class CSVImportableFileFormatFactory
                                                                 {
                                                                     return $component instanceof CSVFormatColumnInfoComponent;
                                                                 });
+        return $this;
     }
 
     public function columnWidths(): array
@@ -105,11 +152,7 @@ abstract class CSVImportableFileFormatFactory
             1    => ['font' => ['bold' => true, 'size' => 12]],
         ];
     }
-
-    public function sortKeysValuesArray(array &$array)
-    { 
-        ksort($array); 
-    }
+ 
     public function sortValueArray(array &$array)
     { 
         sort($array); 

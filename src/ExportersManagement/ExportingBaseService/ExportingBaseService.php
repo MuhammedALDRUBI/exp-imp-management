@@ -11,36 +11,44 @@ abstract class ExportingBaseService
 {
     use ExportingBaseServiceValidationMethods;
 
-    abstract protected function getExportTypesMap()  :array;
+    protected ?string $ModelClass = null; 
+    protected Exporter $exporter;
    
-    public function __construct()
+    abstract protected function initExporter($exporterType) : Exporter;
+    public function __construct(?string $ModelClass = null)
     {
         $this->validateRequest();
+        $this->setModelClass($ModelClass);
+        $this->setExporter();
     }
-    protected function initExporter($exporterTypeClass) : Exporter
+ 
+    protected function setModelClass(?string $ModelClass = null)
     {
-        if(!is_subclass_of($exporterTypeClass , Exporter::class))
-        {
-            throw new Exception("Exporter class is not exists or not a valid Exporter type");
-        }
-        return app()->make($exporterTypeClass);
+        $this->ModelClass = $ModelClass; // no need to validate class ... the exporter will validate its requirements
     }
-
-    public function getExporter() : Exporter
+    
+    protected function setExporter() : void
     {
-        $exportersMap = $this->getExportTypesMap();
-        $exporterType = $this->data["type"];
-
-        if(!array_key_exists($exporterType , $exportersMap))
-        {
-            throw new Exception("File Type Is not supported now");
-        }
-        return $this->initExporter( $exportersMap[$exporterType] ); 
+        $exporterType = $this->data["type"]; 
+        $this->exporter = $this->initExporter(  $exporterType ); 
     }
 
-    public function export() : JsonResponse | StreamedResponse
+    /**
+     * Any access to the exporter will be by basicExport or callOnExporter
+     */
+    protected function getExporter() : Exporter
     { 
-        return $this->getExporter()->export();
+        return $this->exporter;
+    }
+
+    public function basicExport(string $documentTitle) : JsonResponse | StreamedResponse
+    { 
+        return $this->getExporter()->export($documentTitle);
+    }
+
+    public function callOnExporter(callable $callback)
+    {
+        return call_user_func($callback , $this->getExporter());
     }
 
 }
