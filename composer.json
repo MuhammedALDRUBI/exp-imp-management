@@ -13,7 +13,7 @@
     "php": "^7.3|^8.0",
     "laravel/framework": "^8.75",
     "muhammed-aldrubi/temporary-files-handlers": "^1.0.2",
-    "muhammed-aldrubi/pixel-dom-pdf": "^1.0.9",
+    "muhammed-aldrubi/pixel-dom-pdf": "^1.0.17",
     "maatwebsite/excel": "^3.1",
     "rap2hpoutre/fast-excel": "^5.1",
     "pixel-softwares/custom-file-system": "^1.0.4",

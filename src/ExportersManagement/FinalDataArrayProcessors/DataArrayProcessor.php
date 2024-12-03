@@ -69,9 +69,9 @@ class DataArrayProcessor
         return $this;
     }
 
-    protected function processModelSingleDesiredColumns(string $column , Model $model ,array $row = []) : array
+    protected function processModelSingleDesiredColumn(string $column , Model $model , array &$row  ) : array
     {
-        $row[ $column ] =  $this->getObjectKeyValue($column, $model );
+        $row[ $column ] = $this->getObjectKeyValue($column, $model );
         return $row;
     }
     /**
@@ -83,14 +83,14 @@ class DataArrayProcessor
     {
         foreach ($this->ModelDesiredFinalColumns as $column)
         {
-            $row = $this->processModelSingleDesiredColumns($column, $model , $row );
+            $this->processModelSingleDesiredColumn($column, $model , $row );
         }
         return $row;
     }
 
     protected function processDataRow(Model $model) : array
     {
-        return  $this->processModelDesiredColumns($model);
+        return $this->processModelDesiredColumns($model);
     }
     /**
      * @return Collection|LazyCollection|null

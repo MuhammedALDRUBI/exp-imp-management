@@ -65,6 +65,7 @@ trait ObjectValueHandlers
     protected function getObjectKeysValues(array $keys ,  Model | Collection | array | null $object = null) : array | null
     {
         if(!$object ){return null;}
+        
         if(is_array($object))
         {
             /** * @var array $object */
