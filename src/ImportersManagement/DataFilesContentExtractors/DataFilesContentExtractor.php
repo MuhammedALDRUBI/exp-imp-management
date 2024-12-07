@@ -1,10 +1,11 @@
 <?php
 
-namespace ExpImpManagement\ImportersManagement\DataFilesContentProcessors;
+namespace ExpImpManagement\ImportersManagement\DataFilesContentExtractors;
 
+use Illuminate\Support\Collection;
 use TemporaryFilesHandlers\TemporaryFilesProcessors\TemporaryFilesProcessor;
 
-abstract class DataFileContentProcessor
+abstract class DataFilesContentExtractor
 {
     protected string $filePathToProcess ;
     protected ?TemporaryFilesProcessor $filesProcessor = null;
@@ -29,5 +30,5 @@ abstract class DataFileContentProcessor
         return $this;
     }
 
-    abstract public function getData() : array;
+    abstract public function getData() : Collection;
 }

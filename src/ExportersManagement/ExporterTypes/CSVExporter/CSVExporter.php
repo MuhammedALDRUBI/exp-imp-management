@@ -7,7 +7,11 @@ use ExpImpManagement\ExportersManagement\ExporterTypes\CSVExporter\Responders\CS
 use ExpImpManagement\ExportersManagement\FinalDataArrayProcessors\DataArrayProcessor; 
 use ExpImpManagement\ExportersManagement\Responders\StreamingResponder;
 use Exception;
-use ExpImpManagement\ExportersManagement\Exporter\Exporter; 
+use ExpImpManagement\DataProcessors\DataProcessor;
+use ExpImpManagement\DataProcessors\ExportableDataProcessors\CSVExportableDataProcessor;
+use ExpImpManagement\ExportersManagement\Exporter\Exporter;
+use ExpImpManagement\ExportersManagement\Interfaces\ExportsCSVImportableData;
+use ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\CSVImportableFileFormatFactory\CSVImportableFileFormatFactory;
 use ExpImpManagement\Interfaces\PixelExcelExpImpLib;
 use OpenSpout\Common\Exception\InvalidArgumentException;
 use OpenSpout\Common\Exception\IOException;
@@ -35,42 +39,82 @@ class CSVExporter extends Exporter
      * @return DataCustomizerMethods|Exporter
      * @throws Exception
      */
-    protected function processDataCollection(DataArrayProcessor $finalDataArrayProcessor) : self
-    {
-        $this->DataCollection =  $finalDataArrayProcessor->getProcessedData($this->DataCollection);
-        return $this;
-    }
-    protected function getFinalDataArrayProcessor(): DataArrayProcessor
-    {
-        return new DataArrayProcessor();
-    }
+    // protected function processDataCollection(DataArrayProcessor $finalDataArrayProcessor) : self
+    // {
+    //     $this->DataCollection =  $finalDataArrayProcessor->getProcessedData($this->DataCollection);
+    //     return $this;
+    // }
+    // protected function getFinalDataArrayProcessor(): DataArrayProcessor
+    // {
+    //     return new DataArrayProcessor();
+    // }
   
     /**
      * @return array
      * This method is useful to determine the desired columns of model
      * Note  : if the result has '*' as the first element ... That means we want all retrieved columns of the model (not all actual columns ... ONLY Retrieved Columns)
      */
-    protected function getModelDesiredFinalColumns() : array  
+    // protected function getModelDesiredFinalColumns() : array  
+    // {
+    //     return ['*'];
+    // }
+
+    protected ?CSVImportableFileFormatFactory $importableFormatFactory = null;
+
+    public function useImportableFormatFileFactory(CSVImportableFileFormatFactory $importableFormatFactory) : self
     {
-        return ['*'];
+        $this->importableFormatFactory = $importableFormatFactory;
+        return $this;
     }
+
+    public function getImportableFormatFileFactory() : ?CSVImportableFileFormatFactory
+    {
+        return $this->importableFormatFactory ;
+    }
+
+    public function exportImportableData(CSVImportableFileFormatFactory $importableFormatFactory , string $documentTitle): JsonResponse | StreamedResponse
+    {
+        $this->useImportableFormatFileFactory($importableFormatFactory);
+        return parent::export($documentTitle);
+    }
+
+    protected function initCSVExportableDataProcessor() : CSVExportableDataProcessor
+    {
+        return new CSVExportableDataProcessor($this->importableFormatFactory);
+    }
+
+    protected function initDefaultDataProcessor() : DataProcessor
+    {
+        if(!$this->importableFormatFactory && $this instanceof ExportsCSVImportableData)
+        {
+            $this->useImportableFormatFileFactory( $this->getCSVImportableFileFormatFactory() );
+        }
+
+        if($this->importableFormatFactory)
+        {
+            return $this->initCSVExportableDataProcessor();
+        }
+
+        return parent::initDefaultDataProcessor();
+    }
+    
     /**
      * @return DataArrayProcessor
      */
-    protected function initFinalDataArrayProcessor() : DataArrayProcessor
-    {  
-        return $this->getFinalDataArrayProcessor()
-                    ->setModelDesiredFinalDefaultColumnsArray($this->getModelDesiredFinalColumns()) ; 
-    }
+    // protected function initFinalDataArrayProcessor() : DataArrayProcessor
+    // {  
+    //     return $this->getFinalDataArrayProcessor()
+    //                 ->setModelDesiredFinalDefaultColumnsArray($this->getModelDesiredFinalColumns()) ; 
+    // }
 
-    protected function PrepareExporterData() : self
-    {
-        parent::PrepareExporterData();
+    // protected function PrepareExporterData() : self
+    // {
+    //     parent::PrepareExporterData();
         
-        $finalDataArrayProcessor = $this->initFinalDataArrayProcessor();
-        $this->processDataCollection($finalDataArrayProcessor);
-        return $this;
-    }
+    //     $finalDataArrayProcessor = $this->initFinalDataArrayProcessor();
+    //     $this->processDataCollection($finalDataArrayProcessor);
+    //     return $this;
+    // }
 
     protected function getStreamingResponder(): StreamingResponder
     {

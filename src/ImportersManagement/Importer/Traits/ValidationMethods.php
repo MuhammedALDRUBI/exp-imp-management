@@ -25,16 +25,6 @@ trait ValidationMethods
         return $this;
     }
 
-    protected function getUploadedFileValidationRequestFormClass() : string
-    {
-        return UploadedFileRequestForm::class;
-    }
- 
-    protected function getUploadedFileRequestKey()  : string
-    {
-        return "file";
-    }
-
     protected function initValidationManager() : StoringValidationManager
     {
         return StoringValidationManager::Singleton();
@@ -50,6 +40,20 @@ trait ValidationMethods
         return $this->validationManager->getRequestValidData()[ $this->getUploadedFileRequestKey() ];
     }
 
+    /**
+     * UploadedFile validation methods
+     */
+    
+     protected function getUploadedFileValidationRequestFormClass() : string
+     {
+         return UploadedFileRequestForm::class;
+     }
+  
+     protected function getUploadedFileRequestKey()  : string
+     {
+         return "file";
+     }
+ 
     protected function validateUploadedFile() : self
     {
         $this->validationManager->setBaseRequestFormClass( $this->getUploadedFileValidationRequestFormClass() )
@@ -57,9 +61,29 @@ trait ValidationMethods
         return $this;
     }
  
-    protected function validateSingleModel(array $modelData) : void
+    /**
+     * Data Validation part
+     */
+
+
+    protected function prepareValidationManagerForDataValidation() : void
     {
-        $this->validationManager->setBaseRequestFormClass($this->getDataValidationRequestForm())
-                                ->validateSingleModelRowKeys($modelData);
+        $this->validationManager->setBaseRequestFormClass($this->getDataValidationRequestForm());
     }
+
+    protected function validateFileSingleDataRow(array $fileSingleRow) : void
+    {
+        $this->validationManager->setValidatorData($fileSingleRow)->startGeneralValidation();
+    }
+
+    protected function validateSingleModelData(array $modelData) : void
+    {
+        $this->validationManager->validateSingleModelRowKeys($modelData);
+    }
+
+    protected function validateRelationshipSingleDataRow(string $relationshipName , array $singleDataRow = []  ) : void
+    {
+        $this->validationManager->validateRelationshipSingleRowKeys( $relationshipName ,  $singleDataRow   );
+    }
+
 }

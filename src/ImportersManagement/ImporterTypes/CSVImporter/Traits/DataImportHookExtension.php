@@ -7,16 +7,16 @@ use Throwable;
 trait DataImportHookExtension
 {
 
-    protected function failedModelImportingTransactrion(array $row , Throwable $e) : void
+    protected function failedDataRowImportingTransactrion(array $row , Throwable $e) : void
     {
         $this->addRejectedRowToManuallyChanging($row); 
-        parent::failedModelImportingTransactrion($row , $e);
+        parent::failedDataRowImportingTransactrion($row , $e);
     }
      
-    protected function singleRowValidationFailed(array $modelData , Throwable $e) : void
+    protected function singleDataRowValidationFailed(array $modelData , Throwable $e) : void
     {
         $this->addRejectedRowToManuallyChanging($modelData); 
-        parent::singleRowValidationFailed($modelData , $e);
+        parent::singleDataRowValidationFailed($modelData , $e);
     }
      
 }

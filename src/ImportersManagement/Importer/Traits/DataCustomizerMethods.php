@@ -1,146 +1,145 @@
 <?php
 
 namespace ExpImpManagement\ImportersManagement\Importer\Traits;
-
-use ExpImpManagement\ImportersManagement\DataFilesContentProcessors\DataFileContentProcessor;
-use ExpImpManagement\ImportersManagement\Importer\Importer;
-use ExpImpManagement\ImportersManagement\Interfaces\CareAboutDateTruth;
+ 
+use ExpImpManagement\ImportersManagement\Importer\Importer; 
 use Exception; 
+use ExpImpManagement\ImportersManagement\DataFilesContentExtractors\DataFilesContentExtractor;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Collection; 
 use Throwable;
 
 trait DataCustomizerMethods
 {
-
-    protected ?DataFileContentProcessor $dataFileContentProcessor = null;
-    protected array $ModelDesiredColumns = [];
+    protected array $currentModelFillables = [];
+    protected array $currentDataRow = []; 
 
     protected function setModelClass(string $modelClass) : self
     { 
         if(! is_subclass_of($modelClass , Model::class))
         {
-            throw new Exception("Invald model class is provided !");
+            throw new Exception("Invalid model class is provided !");
         }
         $this->ModelClass = $modelClass;
         return $this;
     }
-
-    protected function setDataFileContentProcessorProps() : DataFileContentProcessor
-    { 
-        return $this->dataFileContentProcessor->setFilesProcessor($this->filesProcessor)
-                                              ->setFilePathToProcess($this->uploadedFileTempRealPath); 
-    }
-
-    protected function initDataFileContentProcessor() : DataFileContentProcessor
+     
+    protected function setCurrentModelFillables() : self
     {
-        if(!$this->dataFileContentProcessor)
-        {
-            $this->dataFileContentProcessor = $this->getDataFileContentProcessor();
-        }
-        return $this->setDataFileContentProcessorProps();
-    }
-
-    protected function getDataToImport() : array
-    {
-        return $this->initDataFileContentProcessor()->getData();
-    }
-  
-    protected function setModelDateColumns(array $columns) : array
-    {
-        if($this instanceof CareAboutDateTruth)
-        {
-            return array_merge( $columns , $this->getDateColumns());
-        }
-        return $columns;
-    }
-
-    protected function getModelDBTable() : string
-    {
-        return $this->initNewModel()->getTable();
-    }
-    /**
-     * Override It When It Is Needed In Child Class
-     * @return array
-     */
-    protected function getModelDesiredColumns() : array
-    {
-        return Schema::getColumnListing( $this->getModelDBTable()  );
-    }
-
-    protected function setModelDesiredColumns() : self
-    {
-        $columns = $this->getModelDesiredColumns();
-        $this->ModelDesiredColumns = $this->setModelDateColumns($columns);
+        $this->currentModelFillables = $this->getCurrentModelFillableValues($this->currentDataRow);
         return $this;
     }
 
+    protected function setTheCurrentDataRow(array $row) : void
+    {
+        $this->currentDataRow = $row;
+    } 
+
+    // protected function setModelDateColumns(array $columns) : array
+    // {
+    //     if($this instanceof CareAboutDateTruth)
+    //     {
+    //         return array_merge( $columns , $this->getDateColumns());
+    //     }
+    //     return $columns;
+    // }
+
+    // protected function getModelDBTable() : string
+    // {
+    //     return $this->initNewModel()->getTable();
+    // }
+ 
     protected function initNewModel() : Model
     {
         return app()->make($this->ModelClass);
     }
-    
-    protected function importModel(array $row) : void
-    {
+      
+    protected function importCurrentModel() : Model
+    { 
+        $Model = $this->initNewModel();
+
+        $Model->forceFill($this->currentModelFillables);  
+
+        $Model->save(); 
+
+        return $Model;
+    }
+ 
+ 
+    protected function startDataRowImporitng() : void
+    { 
         try {
 
-            $this->startModelImportingDBTransaction();
+            //starting a new database transaction
+            $this->startDataRowImportingDBTransaction();
 
-            $Model = $this->initNewModel();
+            //importing mode using $this->currentModelFillables (the single model data will validated in importCurrentModel method)
+            $model = $this->importCurrentModel();    
 
-            $Model->forceFill($row);  
+            //an abstract method to allow child handle the relationships based on its type 
+            $this->handleModelRelationships($model);
 
-            $Model->save(); 
-
-            $this->successModelfulImportingTransaction();
+            //commiting database transaction if no exception is thrown
+            $this->successfulDataRowImportingTransaction();
 
         }catch (Throwable $e)
         {
-            $this->failedModelImportingTransactrion( $row , $e);
+            //on any failing this data importing hook method will be called to allow child class to deal with failing
+            $this->failedDataRowImportingTransactrion( $this->currentDataRow , $e);
         }
+        
     }
 
-    protected function getModelDesiredColumnValues(array $dataRow) : array
+    /**
+     * to allow the chuild class to add more validation functionality to be handled in validation try , catch part
+     */
+    protected function processSingleDataRowValidation() : bool
     {
-        $columnsValues = [] ;
-
-        foreach ($this->ModelDesiredColumns as $column)
-        {
-            if(isset($dataRow[$column]))
-            {
-                $columnsValues[$column] =  $dataRow[$column] ?: null ;
-            }
-        }
-        return $columnsValues;
+        $this->validateFileSingleDataRow($this->currentDataRow); // validate row by rules() method found in RequestForm Class
+        $this->validateSingleModelData($this->currentModelFillables);
+        return true; //if no exception is thrown true will be return
     }
 
-    protected function processModelRowValidation(array $row) :  bool
+    protected function FailingHandlerDataRowValidation() : bool
     {
         try
-        {
-            
-            return $this->validateSingleModel($row);
+        {  
+            return $this->processSingleDataRowValidation();
 
         }catch(Throwable $e)
         {
-            $this->singleRowValidationFailed($row , $e);
-            return false; // to stop importDataRow execution
+
+            $this->singleDataRowValidationFailed($this->currentDataRow , $e);
+            return false; // to stop Data row importing execution after handling validation exception in 
+
         }
+    }
+
+    //this method allow the child class to control the conditions of any data row importing
+    protected function checkDataRowBeforeImporting() : bool
+    {
+        return $this->FailingHandlerDataRowValidation()
+               &&
+               !empty( $this->currentModelFillables );
+    }
+ 
+    protected function prepareDataRowForImporting(array $row) : void
+    {
+        $this->setTheCurrentDataRow($row);
+        $this->setCurrentModelFillables();
     }
 
     /**
      * @param array $row 
      * @throws Exception
      */
-    protected function importDataRow(array $row) : void
-    {
-        if( 
-            $this->processModelRowValidation($row)
-            &&
-            !empty( $fillable = $this->getModelDesiredColumnValues($row) )
-          )
+    protected function handleDataRowImporting(array $row) : void
+    {  
+        $this->prepareDataRowForImporting($row);
+
+        if( $this->checkDataRowBeforeImporting() )
         {
-            $this->importModel($fillable);
+            $this->startDataRowImporitng();
         }
     }
 
@@ -148,7 +147,7 @@ trait DataCustomizerMethods
     {
         foreach ($this->ImportedDataArray as $row)
         {
-            $this->importDataRow($row);
+            $this->handleDataRowImporting($row);
         }
     }
 
@@ -157,7 +156,8 @@ trait DataCustomizerMethods
      */
     protected function importData() : Importer
     {   
-        $this->setModelDesiredColumns()->importDataRows();
+        $this->prepareValidationManagerForDataValidation();
+        $this->importDataRows();
         return $this;
     }
  

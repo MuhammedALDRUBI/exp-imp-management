@@ -2,6 +2,8 @@
 
 namespace ExpImpManagement\Interfaces;
 
+use Illuminate\Support\Collection;
+
 interface PixelExcelExpImpLib
 {
 

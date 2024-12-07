@@ -2,26 +2,35 @@
 
 namespace ExpImpManagement\ImportersManagement\ImporterTypes\CSVImporter;
 
-use ExpImpManagement\ImportersManagement\DataFilesContentProcessors\CSVFileContentProcessor;
-use ExpImpManagement\ImportersManagement\DataFilesContentProcessors\DataFileContentProcessor;
+use ExpImpManagement\DataProcessors\ImportableDataProcessors\CSVImportableDataProcessor;
+use ExpImpManagement\DataProcessors\ImportableDataProcessors\ImportableDataProcessor;
+use ExpImpManagement\ImportersManagement\DataFilesContentExtractors\CSVDataFilesContentExtractor;
+use ExpImpManagement\ImportersManagement\DataFilesContentExtractors\DataFilesContentExtractor; 
 use ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\CSVImportableFileFormatFactory\CSVImportableFileFormatFactory;
 use ExpImpManagement\ImportersManagement\Importer\Importer;
 use ExpImpManagement\ImportersManagement\ImporterTypes\CSVImporter\Traits\CSVImporterSerilizing;
 use ExpImpManagement\ImportersManagement\ImporterTypes\CSVImporter\Traits\DataImportingFailingHandling;
+use ExpImpManagement\ImportersManagement\ImporterTypes\CSVImporter\Traits\RelationshipImportingMethods;
 use ExpImpManagement\ImportersManagement\ImportingFilesProcessors\CSVImportingFilesProcessor;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Notifications\Notification;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Throwable;
 
 /**
  * @prop CSVImportingFilesProcessor $filesProcessor
  */
 class CSVImporter extends Importer
 {
-    use DataImportingFailingHandling , CSVImporterSerilizing;
+    use DataImportingFailingHandling , CSVImporterSerilizing , RelationshipImportingMethods;
 
     protected CSVImportableFileFormatFactory $importableTemplateFactory;
 
-    
+    protected array $ModelFillableColumns = [];
+    protected array $relationshipsFillables = [];
+
     public function __construct(string $ModelClass , string $dataValidationRequestFormClass , CSVImportableFileFormatFactory $templateFactory)
     {
         parent::__construct($ModelClass , $dataValidationRequestFormClass);
@@ -62,24 +71,47 @@ class CSVImporter extends Importer
         return "csv";
     }
 
-    protected function getDataFileContentProcessor() : DataFileContentProcessor
+    protected function getDefaultImportableDataProcessor() : ImportableDataProcessor
     {
-        return new CSVFileContentProcessor();
+        return new CSVImportableDataProcessor( $this->getImportableFileFormatFactory() );
     }
 
-    protected function setModelDesiredColumns() : self
+    protected function getDataFilesContentExtractor() : DataFilesContentExtractor
     {
-        $formatFactory = $this->getImportableFileFormatFactory();
+        return new CSVDataFilesContentExtractor();
+    }
 
-        if($formatFactory instanceof WithHeadings)
+    protected function getCurrentModelFillableValues(array $row) : array
+    {
+        $columnsValues = [] ;
+
+        foreach ($this->getModelFillableColumns() as $column)
         {
-            $this->ModelDesiredColumns = $formatFactory->headings();
-            return $this;
+            if(isset($row[$column]))
+            {
+                $columnsValues[$column] =  $row[$column] ?: null ;
+            }
         }
-
-        return  parent::setModelDesiredColumns();
+        return $columnsValues;
     }
-  
+
+
+    protected function setModelFillableColumns() : self
+    {
+        $this->ModelFillableColumns = $this->getImportableFileFormatFactory()->getModelDatabaseFields();
+        return $this; 
+    }
+
+    protected function getModelFillableColumns() : array
+    {
+        return $this->ModelFillableColumns;
+    }
+
+    protected function importDataRows() : void
+    {
+        $this->setModelFillableColumns();
+        parent::importDataRows();
+    }
 
     protected function importData() : Importer
     {

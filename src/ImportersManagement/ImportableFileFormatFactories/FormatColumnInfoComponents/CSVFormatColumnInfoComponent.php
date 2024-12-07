@@ -3,18 +3,24 @@
 namespace ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\FormatColumnInfoComponents;
  
 use ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\ValidationDataTypeSetters\CSVCellValidationDataTypeSetters\CSVCellValidationDataTypeSetter;
+use Illuminate\Support\Str;
 
 class CSVFormatColumnInfoComponent extends FormatColumnInfoComponent
 {
      
     protected string $columnCharSymbol;
     protected string $columnHeaderName; 
+    protected string $databaseFieldName ;
+    protected ?string $relationName = null;
+    protected ?string $columnHeaderPrefix = null;
     protected ?int $width  = null;
     protected ?CSVCellValidationDataTypeSetter $cellValidationSetter = null;
  
-    public function __construct(string $columnCharSymbol , string $columnHeaderName  )
+    public function __construct(string $columnCharSymbol , string $columnHeaderName )
     {
-        $this->setColumnCharSymbol($columnCharSymbol)->setColumnHeaderName($columnHeaderName) ;
+        $this->setColumnCharSymbol($columnCharSymbol)
+             ->setColumnHeaderName($columnHeaderName) 
+             ->setDatabaseFieldName( $columnHeaderName);
     }
 
     // Getter and setter for $columnCharSymbol
@@ -26,6 +32,55 @@ class CSVFormatColumnInfoComponent extends FormatColumnInfoComponent
     public function setColumnCharSymbol(string $columnCharSymbol): self
     {
         $this->columnCharSymbol = $columnCharSymbol;
+        return $this;
+    }
+
+    // Getter and setter for $databaseFieldName
+    public function getDatabaseFieldName(): string
+    {
+        return $this->databaseFieldName;
+    }
+
+    public function setDatabaseFieldName(string $databaseFieldName): self
+    {
+        $this->databaseFieldName = $databaseFieldName;
+        return $this;
+    }
+
+    protected function setRelationName(string $relationName) : void
+    {
+        $this->relationName = $relationName;
+    }
+    public function getRelationName()  : ?string
+    {
+        return $this->relationName;
+    }
+
+    public function isItRelationColumn() : bool
+    {
+        return $this->getRelationName() != null;
+    }
+
+    protected function getPrefiexedColumn(  ?string $columnHeaderPrefix = null) : string
+    {
+        if($columnHeaderPrefix)
+        {
+            return "$columnHeaderPrefix $this->columnHeaderName"  ;
+        }
+        return Str::ucfirst( $this->getRelationName() ) . " $this->columnHeaderName"  ;
+    }
+
+    /** 
+     * Once $columnHeaderPrefix is null the $relationName value will be used as a column prefix as long as $prefixingColumnName value is true
+    */
+    public function relationshipColumn(string $relationName , bool $prefixingColumnName = true , ?string $columnHeaderPrefix = null) : self
+    {
+        $this->setRelationName($relationName);
+
+        if($prefixingColumnName)
+        {
+            $this->setColumnHeaderName( $this->getPrefiexedColumn($relationName , $columnHeaderPrefix) );
+        }
         return $this;
     }
 

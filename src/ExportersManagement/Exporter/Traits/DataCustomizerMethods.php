@@ -5,6 +5,8 @@ namespace ExpImpManagement\ExportersManagement\Exporter\Traits;
 
 use ExpImpManagement\ExportersManagement\Exporter\Exporter;
 use Exception;
+use ExpImpManagement\DataProcessors\DataProcessor;
+use ExpImpManagement\DataProcessors\ExportableDataProcessors\ExportableDataProcessor;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +21,7 @@ trait DataCustomizerMethods
     protected string $modelPrimaryKeyName;
     protected QueryBuilder | Builder | DatabaseQueryBuilder | null $builder = null; 
     protected Collection | LazyCollection | null $DataCollection = null;
+    protected ?DataProcessor $dataProcessor = null;
     protected int $LoadedRowsMaxLimitBeforeDispatchingJob = 5; 
     protected int $dataRowsCount; 
     protected ?Request $request = null; // needed to save request filters and payloads values to job object on needed to run job
@@ -165,6 +168,37 @@ trait DataCustomizerMethods
             $this->callOnBuilder();
         }
     }
+
+    public function useDataProcessor(DataProcessor $dataProcessor) : self
+    {
+        $this->dataProcessor = $dataProcessor;
+        return $this;
+    }
+    
+    protected function initDefaultDataProcessor() : DataProcessor
+    {
+        return new ExportableDataProcessor();
+    }
+
+    /**
+     * using the default data processor 
+     * do for later : make it serlizable and can be set from context
+     */
+    protected function initDataProcessor() : DataProcessor
+    {
+        if(!$this->dataProcessor)
+        {
+            $this->dataProcessor =  $this->initDefaultDataProcessor();
+        }
+        
+        return  $this->dataProcessor;
+    }
+
+    protected function processDataCollection()
+    {
+        $this->DataCollection = $this->initDataProcessor()->processData($this->DataCollection);
+    }
+
     /**
      * @param int $count
      * @return DataCustomizerMethods|Exporter
@@ -186,14 +220,14 @@ trait DataCustomizerMethods
         return $this;
     }
 
-    protected function LazyDataById() : void
+    protected function LazyDataById() : LazyCollection
     {
-        $this->DataCollection = $this->builder->lazyById($this->LoadedRowsMaxLimitBeforeDispatchingJob , $this->modelPrimaryKeyName);
+        return $this->builder->lazyById($this->LoadedRowsMaxLimitBeforeDispatchingJob , $this->modelPrimaryKeyName);
     }
 
-    protected function cursorData() : void
+    protected function cursorData() : LazyCollection
     {
-        $this->DataCollection = $this->builder->cursor();
+        return $this->builder->cursor();
     }
 
     /**
@@ -210,11 +244,11 @@ trait DataCustomizerMethods
 
         if($this->dataRowsCount > $this->LoadedRowsMaxLimitBeforeDispatchingJob)
         {
-            $this->LazyDataById();
+            $this->DataCollection =  $this->LazyDataById();
             return $this;
         }
  
-        $this->cursorData();
+        $this->DataCollection = $this->cursorData();
         return $this;  
     }
 
@@ -225,7 +259,7 @@ trait DataCustomizerMethods
     {
         if(!$this->DataCollection)
         {
-            $this->setDataCollection();
+            $this->setDataCollection()->processDataCollection();
         }
         return $this;
     }
@@ -241,7 +275,7 @@ trait DataCustomizerMethods
     { 
         if($DataCollection)
         {
-            $this->setNeededDataCount($DataCollection->count())->setDataCollection($DataCollection);
+            $this->setNeededDataCount($DataCollection->count())->setDataCollection($DataCollection)->processDataCollection();
         }
         return $this;
     }

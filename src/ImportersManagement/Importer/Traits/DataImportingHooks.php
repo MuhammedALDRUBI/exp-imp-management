@@ -11,26 +11,27 @@ trait DataImportingHooks
     /**
      * @todo later
      */
-    protected function singleRowValidationFailed(array $modelData , Throwable $e) : void
+    protected function singleDataRowValidationFailed(array $row , Throwable $e) : void
     {
         /**
          * Need to set a behavior for failing validation
          */
         return ;
     }
-    protected function successModelfulImportingTransaction() : void
+
+    protected function successfulDataRowImportingTransaction() : void
     {
         DB::commit();  
     }
 
-    protected function failedModelImportingTransactrion(array $row , Throwable $e) : void
+    protected function failedDataRowImportingTransactrion(array $row , Throwable $e) : void
     {
         /**
          * Need to set a behavior for failing inserting
          */
         DB::rollBack(); 
     }
-    protected function startModelImportingDBTransaction() : void
+    protected function startDataRowImportingDBTransaction() : void
     {
         DB::beginTransaction();
     }

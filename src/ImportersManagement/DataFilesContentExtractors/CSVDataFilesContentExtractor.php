@@ -1,26 +1,27 @@
 <?php
 
-namespace ExpImpManagement\ImportersManagement\DataFilesContentProcessors;
+namespace ExpImpManagement\ImportersManagement\DataFilesContentExtractors;
 
 use ExpImpManagement\Interfaces\PixelExcelExpImpLib;
+use Illuminate\Support\Collection;
 use OpenSpout\Common\Exception\IOException;
 use OpenSpout\Common\Exception\UnsupportedTypeException;
 use OpenSpout\Reader\Exception\ReaderNotOpenedException; 
 
-class CSVFileContentProcessor extends DataFileContentProcessor
+class CSVDataFilesContentExtractor extends DataFilesContentExtractor
 {
     protected function initPixelExcelExpImpLib() : PixelExcelExpImpLib
     {
         return app()->make(PixelExcelExpImpLib::class);
     }
     /**
-     * @return array
+     * @return Collection  
      * @throws IOException
      * @throws UnsupportedTypeException
      * @throws ReaderNotOpenedException
      */
-    public function getData(): array
+    public function getData(): Collection 
     {
-        return $this->initPixelExcelExpImpLib()->import( $this->filePathToProcess )->toArray();
+        return $this->initPixelExcelExpImpLib()->import( $this->filePathToProcess ) ;
     }
 }
