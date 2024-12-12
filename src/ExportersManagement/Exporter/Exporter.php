@@ -134,7 +134,7 @@ abstract class Exporter  implements JsonSerializable
     {
         $this->finalFilePath = $this->prepareDataFileToUpload();
         $this->filesProcessor->informExportedDataFilesInfoManager($this->finalFilePath); 
-
+        
         return $this->generateFileAssetURL(
                                                 // geting the name after the child class handled it by setDataFileToExportedFilesProcessor()
                                                 $this->filesProcessor->getFileDefaultName($this->finalFilePath) 
@@ -152,7 +152,7 @@ abstract class Exporter  implements JsonSerializable
             $this->initExporter();
             return $this->getConvenientResponder()->respond(); 
         }catch(Exception $e)
-        {
+        { 
             return Response::error([$e->getMessage()]);
         }
     }

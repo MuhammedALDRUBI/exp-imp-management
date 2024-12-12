@@ -15,10 +15,17 @@ you can init it by __construct method normally .
 ## importers Global methods :
 #####  __construct(string $ModelClass , string $dataValidationRequestFormClass ) 
 pass the model class will be used in importing data and then pass the validation request form class that will be used in data validation .
-###### Note : because of the ignoring of any row insertion has failed , there is no gernerally validation that was using rules() method found in requesty form class , the validation in this case will only be applied on  getModelKeyAdvancedValidationRules(array $data = []) method defined in class implements CRUDServices\Interfaces\ValidationManagerInterfaces\NeedsModelKeyAdvancedValidation interface .
+
+###### Note : because of the ignoring of any row insertion has failed , the validation rules method rules() that is found in request form class is used to generally validate each data row found in the uploaded file , and the rules found in getModelKeyAdvancedValidationRules(array $data = []) method on the model data seperately (that method is defined in class implements CRUDServices\Interfaces\ValidationManagerInterfaces\NeedsModelKeyAdvancedValidation interface ).
+
+###### Note : The Importer main type left the relationship handling to the child classes ... so look for each child type to know how it is handling the relationship validation ,.
 
 #####  setDataValidationRequestFormClass(string $requestFormClass)  : self
 to change Data Validaiton request form class after object construction is done ... must be called before import method calling .
+
+##### useImportableDataProcessor(ImportableDataProcessor $importableDataProcessor) : self
+to change the ImportableDataProcessor before importing them to database
+
 ##### import() : JsonResponse 
 starts to implement importing algorithm that we talked about above .
 
@@ -62,7 +69,7 @@ By extending the importer type you will be able to control every thing in export
 1.1 - Any CSVImporter child class that implements ExpImpManagement\ImportersManagement\Interfaces\SelfConstructableCSVImporter interface 
 and uses ExpImpManagement\ImportersManagement\ImporterTypes\CSVImporter\Traits\CSVImporterSelfConstructing trait doesn't need to pass anything into the __construct method while calling it from the controller context .... The CSVImporterSelfConstructing trait will declare the __construct and pass it the arguments defined by SelfConstructableCSVImporter interface 's getModelClassForSelfConstructing , getDataValidationRequestFormClassForSelfConstructing , getImportableTemplateFactoryForSelfConstructing  methods .
 1.2 - If the class implements ExpImpManagement\ImportersManagement\Interfaces\SelfConstructableCSVImporter interface and need to declare  the __construct  to pass some other props ... Don't use ExpImpManagement\ImportersManagement\ImporterTypes\CSVImporter\Traits\CSVImporterSelfConstructing trait and declare  the __construct  method as you like ( but don't forget to pass the modelClass , dataValidationREquestFormClass , ImportableDataFileFactory arguments to parent::__construct method ) .
-2 - By default our package doesn't handle relationships ... but you can extend the exporter type and add the relationships you want (( If the result importer class has the functinality to handle them , ex : you can create a new type that handle other files uploaded to the request and insert them as you want with a new functionallity you write 
+2 - By default our package CSVImporter only handles the HasOne relations ... and you can request to handle by defining that there is a relation column in the format factory object .
 3 you can override any thing by extending class ... ex : uploaded file handling methods , storign in the temp path or change the path , filesProcessors , Responders classes , notifications classes , overriding the serlizied props .... etc. .
 
 <hr>
@@ -90,28 +97,56 @@ returns the headings of the format file
 ##### public function collection()
 returns the data will represent the rows in format file .... normally it is used for the rejected dfata only and will not be used for an empty format file .
 
-Note : By extending the class you can override any cycle point as you need .
+Note 1 : By extending the class you can override any cycle point as you need .
+Note 2 : There is many public methods in 
+ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\CSVImportableFileFormatFactory\Traits\PublicSetters 
+and
+ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\CSVImportableFileFormatFactory\Traits\PublicGetters
+but you often will not need them  ... they are witten for the package but still they are public methods and you can use them from context .
 
 <hr>
 
-### creating CSVFormatColumnInfoComponent :
+### creating ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\FormatColumnInfoComponents\CSVFormatColumnInfoComponent :
 it is required for creating CSVImportableFileFormatFactory as we talked above .
 ### methods :
+
 #### public function __construct(string $columnCharSymbol , string $columnHeaderName  )
+
 #### public function getColumnCharSymbol(): string
 Gets the column character used by the column in format file
+
 #### public function setColumnCharSymbol(string $columnCharSymbol): self
 Sets which column character must be used by the column in format file
+
 #### public function getColumnHeaderName(): string
 Gets column header name in format file
+
 #### public function setColumnHeaderName(string $columnHeaderName): self
 Sets column header name in format file
+
+
+#### relationshipColumn(string $relationName , bool $prefixingColumnName = true , ?string $columnHeaderPrefix = null) : self
+to inform the component that this column is a relation column and found in other table , by default the database field name is the same header name you entered .... but for the relationship column by default the database column will be different , and by default in this case the column header name will be prefixed by relation name or by any prefix you chose .
+
+#### getColumnHeaderPrefix() : ?string
+to get the column header prefix is set .... by default null , after using relationshipColumn it has a value = relationName or the chosen columnHeaderPrefix
+
+#### setDatabaseFieldName(string $databaseFieldName): self
+to set the column database column's name  , it is not required to use because the Component class handle every thing about database column name and column header .
+
+#### getDatabaseFieldName(): string
+to get the column database column's name ;
+
+
 #### public function setCellDataValidation(CSVCellValidationDataTypeSetter $cellValidationSetter) : self
 Sets CSVCellValidationDataTypeSetter for column in format file
+
 #### public function getCellDataValidation() : ?CSVCellValidationDataTypeSetter
 Gets CSVCellValidationDataTypeSetter defined for column in format file
+
 #### public function setColumnWidth(int $width) : self
 Sets width of column in format file
+
 #### public function getWidth() : ?int
 Gets width of column in format file
 

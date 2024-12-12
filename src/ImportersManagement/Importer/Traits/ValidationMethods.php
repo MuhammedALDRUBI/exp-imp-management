@@ -68,7 +68,7 @@ trait ValidationMethods
 
     protected function prepareValidationManagerForDataValidation() : void
     {
-        $this->validationManager->setBaseRequestFormClass($this->getDataValidationRequestForm());
+        $this->validationManager->setBaseRequestFormClass($this->getDataValidationRequestFormClass());
     }
 
     protected function validateFileSingleDataRow(array $fileSingleRow) : void

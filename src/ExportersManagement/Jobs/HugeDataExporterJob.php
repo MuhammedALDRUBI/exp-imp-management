@@ -20,11 +20,9 @@ class HugeDataExporterJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    private Authenticatable $notifiable;
-    // private Request $Request;
+    private Authenticatable $notifiable; 
     private array $RequestQueryStringArray = [];
-    private array $RequestPostData = [];
-    // private Collection | LazyCollection | null $DataCollection = null;
+    private array $RequestPostData = []; 
  
     private Exporter $exporter;
 
@@ -37,12 +35,7 @@ class HugeDataExporterJob implements ShouldQueue
     {
         $this->setExporter($Exporter)->keepRequestParams()->setNotifiable();
     }
-
-    // public function setDataCollection(Collection | LazyCollection | null $collection) : self
-    // {
-    //     $this->DataCollection = $collection;
-    //     return $this;
-    // }
+ 
 
     private function updateRequest(Request $request) : Request
     {
@@ -62,12 +55,7 @@ class HugeDataExporterJob implements ShouldQueue
      * @throws Exception
      */
     private function setExporter(Exporter $Exporter) : self
-    {
-        // if(!is_subclass_of($ExporterClass , ::class))
-        // {
-        //     throw new Exception("The Given Exporter Class Is Not Valid Exporter Class !");
-        // } 
-        // $this->ExporterClass = $ExporterClass ;
+    { 
         $this->exporter = $Exporter;
         return $this;
     }
@@ -77,12 +65,7 @@ class HugeDataExporterJob implements ShouldQueue
         $this->notifiable =  auth("api")->user();
         return $this;
     }
-
-    // private function setExporter() : self
-    // {
-    //     $this->exporter = new $this->ExporterClass;
-    //     return $this;
-    // }
+ 
 
     protected function NotifyExportedData(string $ExportedDataDownloadingPath) : self
     {
@@ -97,8 +80,7 @@ class HugeDataExporterJob implements ShouldQueue
      */
     public function handle(Request $request) : void
     {  
-        $this->exporter->useRequest( $this->updateRequest($request) );
-        // $this->exporter->useDataCollection($this->DataCollection);
+        $this->exporter->useRequest( $this->updateRequest($request) ); 
         $ExportedDataDownloadingPath = $this->exporter->exportingJobFun();  
         $this->NotifyExportedData($ExportedDataDownloadingPath);
     }

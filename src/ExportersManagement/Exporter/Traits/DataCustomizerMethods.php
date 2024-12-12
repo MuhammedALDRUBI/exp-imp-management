@@ -7,6 +7,8 @@ use ExpImpManagement\ExportersManagement\Exporter\Exporter;
 use Exception;
 use ExpImpManagement\DataProcessors\DataProcessor;
 use ExpImpManagement\DataProcessors\ExportableDataProcessors\ExportableDataProcessor;
+use ExpImpManagement\QueryBuilderClosures\QueryBuilderClosure;
+use ExpImpManagement\QueryBuilderClosurs\QueryBuilderClosur;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -19,13 +21,22 @@ trait DataCustomizerMethods
 { 
     protected ?string $ModelClass  = null;
     protected string $modelPrimaryKeyName;
+    protected ?string $builderlClass = null;
     protected QueryBuilder | Builder | DatabaseQueryBuilder | null $builder = null; 
+    protected ?string $builderClosureClass = null;
     protected Collection | LazyCollection | null $DataCollection = null;
     protected ?DataProcessor $dataProcessor = null;
+    protected ?string $dataProcessorClass = null;
     protected int $LoadedRowsMaxLimitBeforeDispatchingJob = 5; 
     protected int $dataRowsCount; 
     protected ?Request $request = null; // needed to save request filters and payloads values to job object on needed to run job
     protected array $spatieBuilderAllowedFilters = [];
+    
+    const SuppottedQueryBuilderTypes = [
+                                                Builder::class => Builder::class ,
+                                                DatabaseQueryBuilder::class => DatabaseQueryBuilder::class ,
+                                                QueryBuilder::class => QueryBuilder::class
+                                       ];
  
     public function useRequest(Request $request) : self
     {
@@ -40,7 +51,8 @@ trait DataCustomizerMethods
 
     public function setSpatieBuilderAllowedFilters(array $allowedFilters) : self
     {
-       return $this->spatieBuilderAllowedFilters = $allowedFilters;
+       $this->spatieBuilderAllowedFilters = $allowedFilters;
+       return $this;
     }
 
     /**
@@ -122,17 +134,51 @@ trait DataCustomizerMethods
     {
         $this->applyPixelDefaultScopes();
         $this->applySpatieAllowedFilters();
+        $this->callBuilderClosure();
     }
 
-    public function useQueryBuilder(Builder | DatabaseQueryBuilder | QueryBuilder $builder) : self
+    protected function callBuilderClosure()
+    {
+        if($this->builderClosureClass)
+        {
+            $closure = new $this->builderClosureClass;
+            $closure->callOnBuilder( $this->builder );
+        }
+    }
+
+    public function setQueryBuilderClosureClass(?string $queryBuilderclosureClass) : self
+    {
+        if(is_subclass_of($queryBuilderclosureClass , QueryBuilderClosure::class))
+        { 
+            $this->builderClosureClass = $queryBuilderclosureClass;
+        }
+        return $this;
+    }
+
+    protected function useQueryBuilder(Builder | DatabaseQueryBuilder | QueryBuilder $builder) :  void
     {
         $this->builder = $builder;
+    }
+
+    public function useQueryBuilderClass(?string $builderlClass) : self
+    {
+        if(
+            isset(self::SuppottedQueryBuilderTypes[$builderlClass]) 
+          )
+        {  
+            $this->builderlClass = $builderlClass;
+        }
         return $this;
     }
     
-    protected function getQueryBuilderClass() : string
+    protected function getDefaultQueryBuilderClass() : string
     {
         return QueryBuilder::class;
+    }
+
+    protected function getQueryBuilderClass() : string
+    {
+        return $this->builderlClass ?? $this->getDefaultQueryBuilderClass();
     }
 
     protected function initEloquentBuilder() : Builder
@@ -140,6 +186,7 @@ trait DataCustomizerMethods
         $modelClass = $this->requireModelClass(); 
         return $modelClass::query();
     }
+
     protected function initSpatieBuilder() : QueryBuilder
     {
         return $this->getQueryBuilderClass()::for($this->requireModelClass() , $this->request);
@@ -168,35 +215,47 @@ trait DataCustomizerMethods
             $this->callOnBuilder();
         }
     }
-
+ 
     public function useDataProcessor(DataProcessor $dataProcessor) : self
-    {
+    { 
+        $this->setDataProcessorClass( get_class($dataProcessor) ) ;//needed only for serilizing & unserilizing to keep the custom DataProcessor the user passed in context
         $this->dataProcessor = $dataProcessor;
         return $this;
     }
-    
-    protected function initDefaultDataProcessor() : DataProcessor
+     
+    protected function setDataProcessorClass(?string  $dataProcessor) : void
+    { 
+        if(!is_subclass_of($dataProcessor , DataProcessor::class))
+        {
+            $dataProcessor = null;
+        }
+        
+        $this->dataProcessorClass = $dataProcessor;  
+    }
+
+    /**
+     * used only in the classscope to set the DAtaProcessor
+     */
+    protected function setDataProcessor(DataProcessor $dataProcessor) : void
     {
-        return new ExportableDataProcessor();
+        $this->dataProcessor = $dataProcessor; 
     }
 
     /**
      * using the default data processor 
      * do for later : make it serlizable and can be set from context
      */
-    protected function initDataProcessor() : DataProcessor
-    {
-        if(!$this->dataProcessor)
-        {
-            $this->dataProcessor =  $this->initDefaultDataProcessor();
-        }
-        
+    protected function getDataProcessor() : ?DataProcessor
+    { 
         return  $this->dataProcessor;
     }
 
     protected function processDataCollection()
-    {
-        $this->DataCollection = $this->initDataProcessor()->processData($this->DataCollection);
+    { 
+        if($this->getDataProcessor())
+        { 
+            $this->DataCollection = $this->getDataProcessor()->processData($this->DataCollection);
+        }
     }
 
     /**
@@ -230,6 +289,11 @@ trait DataCustomizerMethods
         return $this->builder->cursor();
     }
 
+    protected function doesItHaveRelationshipsToExport() : bool
+    {
+        return false;
+    }
+
     /**
      * @param Collection|LazyCollection|null  $collection
      * @return DataCustomizerMethods|Exporter
@@ -242,7 +306,11 @@ trait DataCustomizerMethods
             return $this;
         }
 
-        if($this->dataRowsCount > $this->LoadedRowsMaxLimitBeforeDispatchingJob)
+        if(
+            $this->DoesHaveBigData()
+            ||
+            $this->doesItHaveRelationshipsToExport()
+          )
         {
             $this->DataCollection =  $this->LazyDataById();
             return $this;
@@ -286,7 +354,8 @@ trait DataCustomizerMethods
     }
 
     protected function DoesHaveBigData() : bool
-    { 
+    {  
+        return true;
         return $this->dataRowsCount > $this->LoadedRowsMaxLimitBeforeDispatchingJob;
     }
  

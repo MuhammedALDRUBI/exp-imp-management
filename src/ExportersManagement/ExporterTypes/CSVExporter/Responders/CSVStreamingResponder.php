@@ -29,7 +29,7 @@ class CSVStreamingResponder extends StreamingResponder
      * @throws WriterNotOpenedException
      */
     public function respond():BinaryFileResponse | StreamedResponse | JsonResponse| string
-    {
+    { 
         return $this->pixelExpImpLib->data($this->DataCollection)->download($this->FileFullName);
     }
 }

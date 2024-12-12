@@ -12,10 +12,38 @@ class TimeCellValidationSetter extends CSVCellValidationDataTypeSetter
 
     public function __construct(string $startTime , string $endTime )
     {
-        $this->startTime = $startTime;
-        $this->endTime = $endTime;
+        $this->setStartTime($startTime);
+        $this->setEndTime($endTime);  
     }
 
+    protected function setStartTime(string $startTime ) 
+    {
+        $this->startTime = $startTime;
+    }
+    
+    protected function setEndTime(string $endTime ) 
+    {
+        $this->endTime = $endTime;
+    }
+    protected function getSerlizingProps() : array
+    {
+        return [ 'startTime' , 'endTime' ];
+    }
+
+    protected static function DoesItHaveMissedSerlizedProps($data)
+    {
+        return parent::DoesItHaveMissedSerlizedProps($data) ||
+               !array_key_exists("startTime" , $data) ||
+               !array_key_exists("endTime" , $data) ;
+    }
+
+    protected function setUnserlizedProps($data)
+    { 
+        parent::setUnserlizedProps($data);
+        $this->setStartTime($data["startTime"]);
+        $this->setEndTime($data["endTime"]); 
+    }
+    
     public function setCellDataValidation(DataValidation $dataValidation)
     {
         $dataValidation->setType( DataValidation::TYPE_TIME );

@@ -10,6 +10,7 @@ use Exception;
 use ExpImpManagement\DataProcessors\DataProcessor;
 use ExpImpManagement\DataProcessors\ExportableDataProcessors\CSVExportableDataProcessor;
 use ExpImpManagement\ExportersManagement\Exporter\Exporter;
+use ExpImpManagement\ExportersManagement\ExporterTypes\CSVExporter\Traits\CSVExporterSerilizing;
 use ExpImpManagement\ExportersManagement\Interfaces\ExportsCSVImportableData;
 use ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\CSVImportableFileFormatFactory\CSVImportableFileFormatFactory;
 use ExpImpManagement\Interfaces\PixelExcelExpImpLib;
@@ -17,11 +18,15 @@ use OpenSpout\Common\Exception\InvalidArgumentException;
 use OpenSpout\Common\Exception\IOException;
 use OpenSpout\Common\Exception\UnsupportedTypeException;
 use OpenSpout\Writer\Exception\WriterNotOpenedException; 
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Http\JsonResponse;
 
 class CSVExporter extends Exporter
 {  
-    protected ?PixelExcelExpImpLib $pixelExpImpLib = null;
-     
+    use CSVExporterSerilizing;
+
+    protected ?PixelExcelExpImpLib $pixelExpImpLib = null; 
+    protected ?CSVImportableFileFormatFactory $importableFormatFactory = null;
  
     protected function initExporter() : self
     {
@@ -29,39 +34,13 @@ class CSVExporter extends Exporter
         $this->initPixelExcelExpImpLib(); 
         return $this;
     }
-
     protected function initPixelExcelExpImpLib() : void
     {
         $this->pixelExpImpLib = app()->make(PixelExcelExpImpLib::class );
     }
-      
-    /**
-     * @return DataCustomizerMethods|Exporter
-     * @throws Exception
-     */
-    // protected function processDataCollection(DataArrayProcessor $finalDataArrayProcessor) : self
-    // {
-    //     $this->DataCollection =  $finalDataArrayProcessor->getProcessedData($this->DataCollection);
-    //     return $this;
-    // }
-    // protected function getFinalDataArrayProcessor(): DataArrayProcessor
-    // {
-    //     return new DataArrayProcessor();
-    // }
   
-    /**
-     * @return array
-     * This method is useful to determine the desired columns of model
-     * Note  : if the result has '*' as the first element ... That means we want all retrieved columns of the model (not all actual columns ... ONLY Retrieved Columns)
-     */
-    // protected function getModelDesiredFinalColumns() : array  
-    // {
-    //     return ['*'];
-    // }
 
-    protected ?CSVImportableFileFormatFactory $importableFormatFactory = null;
-
-    public function useImportableFormatFileFactory(CSVImportableFileFormatFactory $importableFormatFactory) : self
+    public function useImportableFormatFileFactory(?CSVImportableFileFormatFactory $importableFormatFactory = null) : self
     {
         $this->importableFormatFactory = $importableFormatFactory;
         return $this;
@@ -80,11 +59,30 @@ class CSVExporter extends Exporter
 
     protected function initCSVExportableDataProcessor() : CSVExportableDataProcessor
     {
+        if($dataProcessorClass = $this->dataProcessorClass)
+        { 
+            return new $dataProcessorClass($this->importableFormatFactory);
+        }
+
         return new CSVExportableDataProcessor($this->importableFormatFactory);
     }
 
-    protected function initDefaultDataProcessor() : DataProcessor
+    protected function setDataProcessorClass(?string  $dataProcessor) : void
     {
+        //now on serilizing we always have the DataProcessor type class we need otherwise it will still null
+        if($dataProcessor instanceof CSVExportableDataProcessor)
+        {
+            parent::setDataProcessorClass($dataProcessor);
+        }
+    }
+
+    protected function useDefaultDataProcessor() : void
+    {
+        if($this->dataProcessor)
+        {
+            return;
+        }
+
         if(!$this->importableFormatFactory && $this instanceof ExportsCSVImportableData)
         {
             $this->useImportableFormatFileFactory( $this->getCSVImportableFileFormatFactory() );
@@ -92,29 +90,31 @@ class CSVExporter extends Exporter
 
         if($this->importableFormatFactory)
         {
-            return $this->initCSVExportableDataProcessor();
-        }
-
-        return parent::initDefaultDataProcessor();
+            $this->setDataProcessor(  $this->initCSVExportableDataProcessor() );
+        } 
+        
     }
     
-    /**
-     * @return DataArrayProcessor
-     */
-    // protected function initFinalDataArrayProcessor() : DataArrayProcessor
-    // {  
-    //     return $this->getFinalDataArrayProcessor()
-    //                 ->setModelDesiredFinalDefaultColumnsArray($this->getModelDesiredFinalColumns()) ; 
-    // }
+    protected function processDataCollection()
+    {
+        $this->useDefaultDataProcessor();
+        parent::processDataCollection();
+    }
+ 
+    protected function doesItHaveRelationshipsToExport() : bool
+    {
+        if(!$this->importableFormatFactory && $this instanceof ExportsCSVImportableData)
+        {
+            $this->importableFormatFactory = $this->getCSVImportableFileFormatFactory();
+        }
 
-    // protected function PrepareExporterData() : self
-    // {
-    //     parent::PrepareExporterData();
-        
-    //     $finalDataArrayProcessor = $this->initFinalDataArrayProcessor();
-    //     $this->processDataCollection($finalDataArrayProcessor);
-    //     return $this;
-    // }
+        if($this->importableFormatFactory)
+        {
+            return $this->importableFormatFactory->doesItHaveRelationships();
+        }
+
+        return parent::doesItHaveRelationshipsToExport();
+    }
 
     protected function getStreamingResponder(): StreamingResponder
     {

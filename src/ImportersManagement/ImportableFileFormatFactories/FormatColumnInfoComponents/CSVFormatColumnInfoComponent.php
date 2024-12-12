@@ -1,17 +1,21 @@
 <?php
 
 namespace ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\FormatColumnInfoComponents;
- 
+
+use ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\FormatColumnInfoComponents\Traits\CSVFormatColumnInfoComponentSerilizing;
 use ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\ValidationDataTypeSetters\CSVCellValidationDataTypeSetters\CSVCellValidationDataTypeSetter;
 use Illuminate\Support\Str;
+use JsonSerializable;
 
-class CSVFormatColumnInfoComponent extends FormatColumnInfoComponent
+class CSVFormatColumnInfoComponent extends FormatColumnInfoComponent implements JsonSerializable
 {
-     
+     use CSVFormatColumnInfoComponentSerilizing;
+
     protected string $columnCharSymbol;
     protected string $columnHeaderName; 
     protected string $databaseFieldName ;
     protected ?string $relationName = null;
+    protected bool $prefixingColumnNameStatus = true;
     protected ?string $columnHeaderPrefix = null;
     protected ?int $width  = null;
     protected ?CSVCellValidationDataTypeSetter $cellValidationSetter = null;
@@ -47,9 +51,41 @@ class CSVFormatColumnInfoComponent extends FormatColumnInfoComponent
         return $this;
     }
 
-    protected function setRelationName(string $relationName) : void
+    protected function setColumnHeaderPrefix(?string $columnHeaderPrefix) : self
+    {
+        if(!$columnHeaderPrefix)
+        {
+            $columnHeaderPrefix = $this->getRelationName();
+        }
+
+        $this->columnHeaderPrefix = $columnHeaderPrefix;
+
+        return $this;
+    }
+
+    public function getColumnHeaderPrefix() : ?string
+    {
+        return $this->columnHeaderPrefix ;
+    }
+
+    protected function setPrefixingColumnNameStatus(bool $prefixingColumnNameStatus = true) : self
+    {
+        $this->prefixingColumnNameStatus = $prefixingColumnNameStatus;
+        return $this;
+    }
+
+    protected function getPrefixingColumnNameStatus() : bool
+    {
+        return $this->prefixingColumnNameStatus ;
+    }
+
+    /**
+     * Setter needed for serilizing
+     */
+    protected function setRelationName(?string $relationName) : self
     {
         $this->relationName = $relationName;
+        return $this;
     }
     public function getRelationName()  : ?string
     {
@@ -58,17 +94,9 @@ class CSVFormatColumnInfoComponent extends FormatColumnInfoComponent
 
     public function isItRelationColumn() : bool
     {
-        return $this->getRelationName() != null;
+        return (bool) $this->getRelationName() ;
     }
 
-    protected function getPrefiexedColumn(  ?string $columnHeaderPrefix = null) : string
-    {
-        if($columnHeaderPrefix)
-        {
-            return "$columnHeaderPrefix $this->columnHeaderName"  ;
-        }
-        return Str::ucfirst( $this->getRelationName() ) . " $this->columnHeaderName"  ;
-    }
 
     /** 
      * Once $columnHeaderPrefix is null the $relationName value will be used as a column prefix as long as $prefixingColumnName value is true
@@ -76,11 +104,9 @@ class CSVFormatColumnInfoComponent extends FormatColumnInfoComponent
     public function relationshipColumn(string $relationName , bool $prefixingColumnName = true , ?string $columnHeaderPrefix = null) : self
     {
         $this->setRelationName($relationName);
-
-        if($prefixingColumnName)
-        {
-            $this->setColumnHeaderName( $this->getPrefiexedColumn($relationName , $columnHeaderPrefix) );
-        }
+        $this->setPrefixingColumnNameStatus($prefixingColumnName);
+        $this->setColumnHeaderPrefix($columnHeaderPrefix);
+        $this->handlePrefixedHeaderName();
         return $this;
     }
 
@@ -90,13 +116,31 @@ class CSVFormatColumnInfoComponent extends FormatColumnInfoComponent
         return $this->columnHeaderName;
     }
 
+    protected function getPrefiexedHeaderName() : string
+    {
+        if($this->getColumnHeaderPrefix() )
+        {
+            return Str::ucfirst( $this->getColumnHeaderPrefix() ) . " " . $this->getColumnHeaderName()  ;
+        } 
+        
+        return  $this->getColumnHeaderName()  ;
+    }
+
+    protected function handlePrefixedHeaderName() : void
+    {
+        if($this->getPrefixingColumnNameStatus() && $this->getColumnHeaderPrefix())
+        {
+            $this->setColumnHeaderName( $this->getPrefiexedHeaderName() );
+        }
+    }
+
     public function setColumnHeaderName(string $columnHeaderName): self
     {
         $this->columnHeaderName = $columnHeaderName;
         return $this;
     }
 
-    public function setCellDataValidation(CSVCellValidationDataTypeSetter $cellValidationSetter) : self
+    public function setCellDataValidation(?CSVCellValidationDataTypeSetter $cellValidationSetter = null) : self
     {
         $this->cellValidationSetter = $cellValidationSetter;
         return $this;
@@ -107,7 +151,7 @@ class CSVFormatColumnInfoComponent extends FormatColumnInfoComponent
         return $this->cellValidationSetter;
     } 
 
-    public function setColumnWidth(int $width) : self
+    public function setColumnWidth(?int $width) : self
     {
         $this->width = $width;
         return $this;

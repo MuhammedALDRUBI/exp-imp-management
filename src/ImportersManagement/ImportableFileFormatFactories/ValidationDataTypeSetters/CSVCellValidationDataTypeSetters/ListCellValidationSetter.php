@@ -11,8 +11,31 @@ class ListCellValidationSetter extends CSVCellValidationDataTypeSetter
 
     public function __construct(array $options)
     {
+        $this->setOptions($options);
+    }
+
+    public function setOptions(array $options )
+    {
         $this->options = $options;
     }
+
+    protected function getSerlizingProps() : array
+    {
+        return [ 'options'  ];
+    }
+
+    protected static function DoesItHaveMissedSerlizedProps($data)
+    {
+        return parent::DoesItHaveMissedSerlizedProps($data) ||
+               !array_key_exists("options" , $data)   ;
+    }
+
+    protected function setUnserlizedProps($data)
+    { 
+        parent::setUnserlizedProps($data); 
+        $this->setOptions($data["options"]); 
+    }
+
 
     public function setCellDataValidation(DataValidation $dataValidation)
     {

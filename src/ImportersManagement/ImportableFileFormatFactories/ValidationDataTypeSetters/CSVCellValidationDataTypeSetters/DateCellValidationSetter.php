@@ -13,8 +13,36 @@ class DateCellValidationSetter extends CSVCellValidationDataTypeSetter
 
     public function __construct(string $startDate , string $endDate )
     {
+        $this->setStartDate($startDate);
+        $this->setEndDate($endDate); 
+    }
+
+    protected function setStartDate(string $startDate ) 
+    {
         $this->startDate = $startDate;
+    }
+    
+    protected function setEndDate(string $endDate ) 
+    {
         $this->endDate = $endDate;
+    }
+    protected function getSerlizingProps() : array
+    {
+        return [ 'startDate' , 'endDate' ];
+    }
+
+    protected static function DoesItHaveMissedSerlizedProps($data)
+    {
+        return parent::DoesItHaveMissedSerlizedProps($data) ||
+               !array_key_exists("startDate" , $data) ||
+               !array_key_exists("endDate" , $data) ;
+    }
+
+    protected function setUnserlizedProps($data)
+    { 
+        parent::setUnserlizedProps($data);
+        $this->setStartDate($data["startDate"]);
+        $this->setEndDate($data["endDate"]); 
     }
 
     public function setCellDataValidation(DataValidation $dataValidation)

@@ -12,8 +12,37 @@ class TextLengthCellValidationSetter extends CSVCellValidationDataTypeSetter
     protected int $minLength = 0;
     public function __construct(int $maxLength , int $minLength = 0)
     {
+        $this->setMaxLength($maxLength);
+        $this->seMinLength($minLength);
+    }
+
+    protected function setMaxLength(string $maxLength ) 
+    {
         $this->maxLength = $maxLength;
+    }
+    
+    protected function seMinLength(string $minLength ) 
+    {
         $this->minLength = $minLength;
+    }
+
+    protected function getSerlizingProps() : array
+    {
+        return [ 'maxLength' , 'minLength' ];
+    }
+
+    protected static function DoesItHaveMissedSerlizedProps($data)
+    {
+        return parent::DoesItHaveMissedSerlizedProps($data) ||
+               !array_key_exists("maxLength" , $data) ||
+               !array_key_exists("minLength" , $data) ;
+    }
+
+    protected function setUnserlizedProps($data)
+    { 
+        parent::setUnserlizedProps($data);
+        $this->setMaxLength($data["maxLength"]);
+        $this->seMinLength($data["minLength"]); 
     }
 
     public function setCellDataValidation(DataValidation $dataValidation)

@@ -42,7 +42,8 @@ abstract class CSVImportableFileFormatFactory
     public function __construct(string $fileName, array $headers = [])
     { 
         $this->setFileName($fileName)->setHeaders($headers)
-                                    ->setValidColumnFormatInfoCompoenents()->setModelColumnComponents()->setRelationshipColumnComponents()
+                                    ->setChildColumnFormatInfoCompoenents()
+                                    ->setModelColumnComponents()->setRelationshipColumnComponents()
                                     ->setFormatDefaultCollection();
     }
  
@@ -89,17 +90,22 @@ abstract class CSVImportableFileFormatFactory
     }
 
     
-    protected function setValidColumnFormatInfoCompoenents() : self
+    protected function setChildColumnFormatInfoCompoenents() : self
+    {
+       $this->useValidColumnFormatInfoCompoenents( $this->getColumnFormatInfoCompoenents()  );
+        return $this;
+    }
+
+    protected function useValidColumnFormatInfoCompoenents(array $components) : self
     {
         $this->validColumnFormatInfoCompoenents =  array_filter(
-                                                                $this->getColumnFormatInfoCompoenents() ,
+                                                                $components ,
                                                                 function($component)
                                                                 {
                                                                     return $component instanceof CSVFormatColumnInfoComponent;
                                                                 });
         return $this;
     }
-
     public function columnWidths(): array
     {
         $columnsWidth = [];

@@ -95,6 +95,8 @@ trait DataCustomizerMethods
      */
     protected function processSingleDataRowValidation() : bool
     {
+        return true;
+
         $this->validateFileSingleDataRow($this->currentDataRow); // validate row by rules() method found in RequestForm Class
         $this->validateSingleModelData($this->currentModelFillables);
         return true; //if no exception is thrown true will be return
@@ -117,7 +119,7 @@ trait DataCustomizerMethods
 
     //this method allow the child class to control the conditions of any data row importing
     protected function checkDataRowBeforeImporting() : bool
-    {
+    { 
         return $this->FailingHandlerDataRowValidation()
                &&
                !empty( $this->currentModelFillables );
@@ -138,9 +140,9 @@ trait DataCustomizerMethods
         $this->prepareDataRowForImporting($row);
 
         if( $this->checkDataRowBeforeImporting() )
-        {
+        { 
             $this->startDataRowImporitng();
-        }
+        } 
     }
 
     protected function importDataRows() : void

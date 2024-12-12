@@ -28,7 +28,7 @@ class CSVExportableDataProcessor extends ExportableDataProcessor
         return $this->factory;
     } 
     protected function appendRelationshipProps(array $dataRow , array &$processedDataRow) : void
-    {
+    { 
         foreach($this->getCSVImportableFileFormatFactory()->getRelationshipColumnComponents() as $relationshipName => $columnComponents)
         { 
             if(
@@ -57,15 +57,13 @@ class CSVExportableDataProcessor extends ExportableDataProcessor
         {
             $modelProps[ $columnComponent->getColumnHeaderName() ] = $dataRow[ $columnComponent->getDatabaseFieldName() ] ?? null;
         }
-        return $modelProps;
-        // $modelKeys = $this->getCSVImportableFileFormatFactory()->getModelHeadings();
-        // return array_intersect_key($dataRow, array_flip($modelKeys));
+        return $modelProps; 
     }
 
     protected function getProcessedDataRow(array $dataRow) : array
-    {
+    { 
         $processedDataRow = $this->getModelProps($dataRow); 
-        $this->appendRelationshipProps($processedDataRow , $dataRow);
+        $this->appendRelationshipProps( $dataRow , $processedDataRow);  
         return $processedDataRow;
     } 
 }

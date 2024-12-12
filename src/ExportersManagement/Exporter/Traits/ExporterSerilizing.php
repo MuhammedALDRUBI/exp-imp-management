@@ -10,7 +10,7 @@ trait ExporterSerilizing
     protected function getSerlizingProps() : array
     {
         return [ 
-            'fileName' , 'fileFullName'  , 'ModelClass' , 'DataCollection' 
+            'fileName' , 'fileFullName'  , 'ModelClass' , 'builderlClass' , 'builderClosureClass' , 'DataCollection' , 'dataProcessorClass'
         ];
     }
 
@@ -45,7 +45,10 @@ trait ExporterSerilizing
                ! array_key_exists('fileName' , $data) ||
                ! array_key_exists('fileFullName' , $data) ||
                ! array_key_exists('ModelClass' , $data)  ||
-               ! array_key_exists('DataCollection' , $data) ;
+               ! array_key_exists('DataCollection' , $data) ||
+               !array_key_exists("dataProcessorClass" , $data) ||
+               !array_key_exists("builderlClass" , $data) ||
+               !array_key_exists("builderClosureClass" , $data) ;
     }
     
     protected static function checkRequiredProps($data) : void
@@ -59,10 +62,14 @@ trait ExporterSerilizing
     protected function setUnserlizedProps($data)
     { 
         static::checkRequiredProps($data);
-
+ 
         $this->setFileName($data["fileName"])->setFileFullName()
              ->setModelClass($data["ModelClass"])
-             ->useDataCollection($data["DataCollection"]);
+             ->useDataCollection($data["DataCollection"])
+             ->useQueryBuilderClass($data["builderlClass"])
+             ->setQueryBuilderClosureClass($data["builderClosureClass"]);
+ 
+        $this->setDataProcessorClass($data["dataProcessorClass"]);
     } 
 
     // Rehydrate the object from serialized data

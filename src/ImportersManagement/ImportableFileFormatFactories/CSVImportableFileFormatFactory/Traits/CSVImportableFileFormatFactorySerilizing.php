@@ -10,7 +10,7 @@ trait CSVImportableFileFormatFactorySerilizing
     protected function getSerlizingProps() : array
     {
         return [ 
-              'fileName'  , 'headers', 'formatDataCollection'  
+              'fileName'  , 'headers', 'formatDataCollection' , 'validColumnFormatInfoCompoenents'  
         ];
     }
 
@@ -36,7 +36,7 @@ trait CSVImportableFileFormatFactorySerilizing
 
     protected static function throwUnerilizableObjectException() : void
     {
-        throw new Exception("Failed to unserlize Importer ... A wrong Serilized data string is passed !");
+        throw new Exception("Failed to unserlize CSVImportableFileFormatFactory ... A wrong Serilized data string is passed !");
     }
     
     protected static function DoesItHaveMissedSerlizedProps($data)
@@ -44,7 +44,8 @@ trait CSVImportableFileFormatFactorySerilizing
        return  ! is_array($data) ||
                ! array_key_exists('fileName' , $data) ||
                ! array_key_exists('headers' , $data) ||
-               ! array_key_exists('formatDataCollection' , $data)   ;
+               ! array_key_exists('formatDataCollection' , $data) ||
+               ! array_key_exists('validColumnFormatInfoCompoenents' , $data) ;
     }
     
     protected static function checkRequiredProps($data) : void
@@ -61,19 +62,20 @@ trait CSVImportableFileFormatFactorySerilizing
 
         $this->setFileName($data["fileName"])
              ->setHeaders($data["headers"])
-             ->setDataFileToManuallyChange($data["formatDataCollection"]);
+             ->setDataFileToManuallyChange($data["formatDataCollection"])
+             ->useValidColumnFormatInfoCompoenents($data["validColumnFormatInfoCompoenents"]) ;
     } 
 
     // Rehydrate the object from serialized data
     public function __unserialize(array $data): void
     {
         $this->setUnserlizedProps($data);  
-        $this->__wakeup(); 
+        $this->__wakeup();
     }
-    
+
     public function __wakeup()
     {
-        $this->setValidColumnFormatInfoCompoenents();
+        $this->setModelColumnComponents()->setRelationshipColumnComponents();
     }
 
 }

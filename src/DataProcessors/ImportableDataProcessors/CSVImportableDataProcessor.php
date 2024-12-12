@@ -48,15 +48,13 @@ class CSVImportableDataProcessor extends ImportableDataProcessor
         {
             $modelProps[ $columnComponent->getDatabaseFieldName() ] = $dataRow[ $columnComponent->getColumnHeaderName() ] ?? null;
         }
-        return $modelProps;
-        // $modelKeys = $this->getCSVImportableFileFormatFactory()->getModelHeadings();
-        // return array_intersect_key($dataRow, array_flip($modelKeys));
+        return $modelProps; 
     }
 
     protected function getProcessedDataRow(array $dataRow) : array
     {
         $processedDataRow = $this->getModelProps($dataRow); 
-        $this->appendRelationshipProps($processedDataRow , $dataRow);
+        $this->appendRelationshipProps( $dataRow , $processedDataRow); 
         return $processedDataRow;
     } 
   
