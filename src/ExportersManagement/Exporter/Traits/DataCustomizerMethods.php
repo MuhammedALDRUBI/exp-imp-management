@@ -355,7 +355,6 @@ trait DataCustomizerMethods
 
     protected function DoesHaveBigData() : bool
     {  
-        return true;
         return $this->dataRowsCount > $this->LoadedRowsMaxLimitBeforeDispatchingJob;
     }
  
