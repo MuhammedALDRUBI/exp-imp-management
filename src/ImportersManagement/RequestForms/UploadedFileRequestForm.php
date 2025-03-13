@@ -19,6 +19,10 @@ class UploadedFileRequestForm extends BaseFormRequest
                             "required", 
                             "mimetypes:text/csv,application/csv,text/plain",
                       ],
+
+            'truncateTable' => [
+                                        "nullable" , "boolean"
+                                 ]
         ];
     }
     

@@ -29,6 +29,7 @@ abstract class Importer implements JsonSerializable
 
     
     protected array $ImportedDataArray = [];
+    protected bool $truncateTableBeforeImproting = false;
     protected ?string $ModelClass = null; 
     protected ?ImportingFilesProcessor $filesProcessor = null;
 
@@ -92,7 +93,7 @@ abstract class Importer implements JsonSerializable
     public function import() : JsonResponse
     {
         try{
-            $this->setupImporter()->HandleUploadedFile();
+            $this->setupImporter()->HandleUploadedFile()->setTableTruncatingStatus();
             return $this->initResponder()->respond();
         }catch(Exception $e)
         {

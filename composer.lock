@@ -2589,16 +2589,16 @@
         },
         {
             "name": "pixel-softwares/crud-services",
-            "version": "1.1.3",
+            "version": "1.1.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Pixel-Softwares-com/crud-services.git",
-                "reference": "86bf3395c9bfa5cec5e564b28d90295fdfabd896"
+                "reference": "b37e888eac529fea32754f8978ce380832ec7e4d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Pixel-Softwares-com/crud-services/zipball/86bf3395c9bfa5cec5e564b28d90295fdfabd896",
-                "reference": "86bf3395c9bfa5cec5e564b28d90295fdfabd896",
+                "url": "https://api.github.com/repos/Pixel-Softwares-com/crud-services/zipball/b37e888eac529fea32754f8978ce380832ec7e4d",
+                "reference": "b37e888eac529fea32754f8978ce380832ec7e4d",
                 "shasum": ""
             },
             "require": {
@@ -2633,10 +2633,10 @@
             ],
             "description": "CRUDServices Package",
             "support": {
-                "source": "https://github.com/Pixel-Softwares-com/crud-services/tree/1.1.3",
+                "source": "https://github.com/Pixel-Softwares-com/crud-services/tree/1.1.7",
                 "issues": "https://github.com/Pixel-Softwares-com/crud-services/issues"
             },
-            "time": "2024-12-07T06:31:45+00:00"
+            "time": "2025-03-13T00:37:02+00:00"
         },
         {
             "name": "pixel-softwares/custom-file-system",

@@ -11,7 +11,7 @@ trait ImporterSerilizing
     protected function getSerlizingProps() : array
     {
         return [ 
-              'ModelClass' , 'dataValidationRequestFormClass' , 'uploadedFileTempRealPath' , 'UploadedFileFullName'
+              'ModelClass' , 'dataValidationRequestFormClass' , 'uploadedFileTempRealPath' , 'UploadedFileFullName' , 'truncateTableBeforeImproting'
         ];
     }
 
@@ -46,7 +46,8 @@ trait ImporterSerilizing
                ! array_key_exists('ModelClass' , $data) ||
                ! array_key_exists('dataValidationRequestFormClass' , $data) ||
                ! array_key_exists('uploadedFileTempRealPath' , $data)  ||
-               ! array_key_exists('UploadedFileFullName' , $data) ;
+               ! array_key_exists('UploadedFileFullName' , $data)  ||
+               ! array_key_exists('truncateTableBeforeImproting' , $data) ;
     }
     
     protected static function checkRequiredProps($data) : void
@@ -64,7 +65,8 @@ trait ImporterSerilizing
         $this->setModelClass($data["ModelClass"])
              ->setDataValidationRequestFormClass($data["dataValidationRequestFormClass"])
              ->setUploadedFileTempRealPath($data["uploadedFileTempRealPath"])
-             ->setUploadedFileFullName($data["UploadedFileFullName"]);
+             ->setUploadedFileFullName($data["UploadedFileFullName"])
+             ->setTableTruncatingStatus($data["truncateTableBeforeImproting"]);
     } 
 
     // Rehydrate the object from serialized data

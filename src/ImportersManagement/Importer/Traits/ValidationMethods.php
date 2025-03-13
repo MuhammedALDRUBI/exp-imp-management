@@ -40,6 +40,11 @@ trait ValidationMethods
         return $this->validationManager->getRequestValidData()[ $this->getUploadedFileRequestKey() ];
     }
 
+    protected function getTableTruncatingRequestingStatus() : bool
+    {
+        return $this->validationManager->getRequestValidData()[ $this->getTableTruncatingRequestingStatusKey() ] ?? false;
+    }
+    
     /**
      * UploadedFile validation methods
      */
@@ -53,7 +58,12 @@ trait ValidationMethods
      {
          return "file";
      }
- 
+
+     protected function getTableTruncatingRequestingStatusKey()  : string
+     {
+        return "truncateTable";
+     }
+
     protected function validateUploadedFile() : self
     {
         $this->validationManager->setBaseRequestFormClass( $this->getUploadedFileValidationRequestFormClass() )

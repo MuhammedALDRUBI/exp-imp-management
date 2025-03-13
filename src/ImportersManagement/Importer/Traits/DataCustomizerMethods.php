@@ -1,7 +1,8 @@
 <?php
 
 namespace ExpImpManagement\ImportersManagement\Importer\Traits;
- 
+
+use CRUDServices\DatabaseManagers\MySqlDatabaseManager;
 use ExpImpManagement\ImportersManagement\Importer\Importer; 
 use Exception; 
 use ExpImpManagement\ImportersManagement\DataFilesContentExtractors\DataFilesContentExtractor;
@@ -117,6 +118,26 @@ trait DataCustomizerMethods
         }
     }
 
+    protected function isItRequestedToTuncateTable() : bool
+    {
+        return $this->truncateTableBeforeImproting;
+    }
+
+    protected function truncateByCRUDDatabaseManager(string $tableName) : void
+    {
+        MySqlDatabaseManager::truncateDBTable($tableName);
+    }
+    
+    protected function truncateTableIfRequested() : void
+    {
+        if($this->isItRequestedToTuncateTable())
+        {
+            $Model = $this->initNewModel();
+            $tableName = $Model->getTable();
+            $this->truncateByCRUDDatabaseManager($tableName);
+        }
+    }
+
     //this method allow the child class to control the conditions of any data row importing
     protected function checkDataRowBeforeImporting() : bool
     { 
@@ -141,6 +162,7 @@ trait DataCustomizerMethods
 
         if( $this->checkDataRowBeforeImporting() )
         { 
+            $this->truncateTableIfRequested();
             $this->startDataRowImporitng();
         } 
     }
@@ -152,7 +174,7 @@ trait DataCustomizerMethods
             $this->handleDataRowImporting($row);
         }
     }
-
+  
     /**
      * @throws Exception
      */
@@ -162,5 +184,17 @@ trait DataCustomizerMethods
         $this->importDataRows();
         return $this;
     }
+
+    protected function setTableTruncatingStatus(?bool $status = null) : self
+    {
+        if($status === null)
+        {
+            $status =  $this->getTableTruncatingRequestingStatus();
+        }
+
+        $this->truncateTableBeforeImproting = $status;
+        return $this;
+    }    
+
  
 }
