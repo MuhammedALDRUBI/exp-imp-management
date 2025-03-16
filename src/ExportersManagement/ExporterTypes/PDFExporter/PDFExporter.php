@@ -63,12 +63,17 @@ class PDFExporter extends Exporter
         return $this;
     }
   
+    protected function getViewDataKeys() : array
+    {
+        $firstRow = $this->DataCollection?->first()?->toArray() ?? [];
+        return array_keys($firstRow);
+    }
     /**
      * Handle the data collection as you want in the view 
      */
     protected function getViewToRender() : View
     {
-        return view($this->requireViewTemplateRelativePath() , ["data" => $this->DataCollection ]);
+        return view($this->requireViewTemplateRelativePath() , ["data" => $this->DataCollection->toArray() , "keys" => $this->getViewDataKeys() ]);
     }
     
     protected function passViewToPDFLib() : self
