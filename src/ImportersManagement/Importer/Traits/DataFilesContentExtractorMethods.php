@@ -25,7 +25,7 @@ trait DataFilesContentExtractorMethods
         return $this->setDataFilesContentExtractorProps();
     }
     
-    protected function extraactFileDataToImport() : Collection
+    protected function extractFileDataToImport() : Collection
     {
         return $this->initDataFilesContentExtractor()->getData();
     }

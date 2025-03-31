@@ -34,6 +34,26 @@ trait RelationshipImportingMethods
         return $relation instanceof HasOne ? $relation : null;
     }
 
+    
+    protected function doesRelationColumnNeedUserDisplayValueReplacement(string $relationName , $columnFieldName) : bool
+    {
+        if($relationReplacementColumns = $this->relationColumnsNeedUserDisplayValueReplacement[$relationName] ?? null)
+        {
+            return in_array( $columnFieldName , $relationReplacementColumns);
+        }
+        return false;
+    }
+
+    public function getRelationshipDbStoringValue(string $relationName  , string $columnFieldName, ?string $userDisplayValue = null) : string|array|null
+    {
+        if($this->doesRelationColumnNeedUserDisplayValueReplacement($relationName , $columnFieldName))
+        {
+            return $this->getImportableFileFormatFactory()->getRelationshipDbStoringValue($relationName , $userDisplayValue);
+        }
+
+        return $userDisplayValue;
+    }
+
     protected function getRelationshipFillableValues(string $relationshipName, array $relationshipFillables) : array
     {
         $dataValues = $this->currentDataRow[$relationshipName] ?? [];
@@ -43,8 +63,12 @@ trait RelationshipImportingMethods
         {
             if(isset($dataValues[$column]))
             {
-                $fillables[$column] =  $dataValues[$column] ?: null ;
+                $initValue = $dataValues[$column] ?: null ; 
+                
+                $fillables[$column] = $this->getRelationshipDbStoringValue($relationshipName , $initValue);
+
             }
+
         }
         return $fillables;
     }
@@ -60,6 +84,17 @@ trait RelationshipImportingMethods
                 $relation->create($relationshipFillableValues); //if any exception is thrown the database transaction will be failed in the parent Importer
             }
         }
+    }
+
+    protected function setRelationsetColumnsNeedUserDisplayValueReplacement() : self
+    {
+        foreach(array_keys($this->getRelationshipsFillableColumns()) as $relationshipName)
+        {
+            $this->relationColumnsNeedUserDisplayValueReplacement[$relationshipName] 
+            =
+            $this->getImportableFileFormatFactory()->getRelationshipDisplayValueReplacmentNeedingColumnFieldNames($relationshipName);
+        }
+        return $this;
     }
 
     protected function setRelationshipsFillableColumns() : void
@@ -82,6 +117,7 @@ trait RelationshipImportingMethods
         if($this->doesItHaveRelationships())
         {
             $this->setRelationshipsFillableColumns();
+            $this->setRelationsetColumnsNeedUserDisplayValueReplacement();
 
             foreach($this->getRelationshipsFillableColumns() as $relationshipName => $relationshipFillables)
             {

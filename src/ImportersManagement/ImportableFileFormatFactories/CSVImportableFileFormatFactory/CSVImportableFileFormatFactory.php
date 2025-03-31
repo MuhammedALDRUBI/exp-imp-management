@@ -140,14 +140,15 @@ abstract class CSVImportableFileFormatFactory
             if($componenet->isItRelationColumn())
             {
                 $relationName = $componenet->getRelationName();
+                $columnFielldName = $componenet->getDatabaseFieldName();
 
-                if( isset($componenets[$componenet->getRelationName()]) )
+                if( isset($componenets[$relationName]) )
                 {
-                    $components[$relationName][] = $componenet;
+                    $components[$relationName][$columnFielldName] = $componenet;
                     continue;
                 }
 
-                $components[$relationName]= [$componenet];
+                $components[$relationName]= [ $columnFielldName => $componenet];
             }
         }
         $this->relationshipsColumnComponents = $components;
@@ -158,10 +159,13 @@ abstract class CSVImportableFileFormatFactory
 
     protected function setModelColumnComponents() : self
     {
-        $this->modelColumnComponents = array_filter($this->validColumnFormatInfoCompoenents , function($componenet)
-                                        {
-                                                    return !$componenet->isItRelationColumn();
-                                        });
+        foreach($this->validColumnFormatInfoCompoenents  as $componenet)
+        {
+            if(!$componenet->isItRelationColumn())
+            {
+                $this->modelColumnComponents[$componenet->getDatabaseFieldName()] = $componenet;
+            }
+        }
         return $this;
     }
    
@@ -195,6 +199,7 @@ abstract class CSVImportableFileFormatFactory
     }
 
 
+    //this is the old func
     // public function setDropDownColumnValidation($column, $options, $row_count, $column_count, AfterSheet $event)
     // {
     //     // set dropdown list for first data row

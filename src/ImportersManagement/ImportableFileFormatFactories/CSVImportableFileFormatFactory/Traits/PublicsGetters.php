@@ -2,11 +2,69 @@
 
 namespace ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\CSVImportableFileFormatFactory\Traits;
 
+use ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\FormatColumnInfoComponents\CSVFormatColumnInfoComponentTypes\CSVDropDownListColumnInfoComponent;
 use Illuminate\Support\Collection;
 
 trait PublicsGetters
 {
-    
+
+    public function getModelDbStoringValue(?string $userDisplayValue = null) : string|array|null
+    {
+        $component = $this->getModelColumnComponents()[$userDisplayValue] ?? null;
+        if($component instanceof CSVDropDownListColumnInfoComponent)
+        {
+            return $component->getDbStoringValue($userDisplayValue);
+        }
+
+        return $userDisplayValue;
+    }
+
+    public function getModelDisplayValueReplacmentNeedingColumnFieldNames() : array
+    {
+        return array_map(function($component)
+               {
+                   return $component->getDatabaseFieldName();
+               } , $this->getModelDisplayValueReplacmentNeedingColumns());
+    }
+
+    public function getModelDisplayValueReplacmentNeedingColumns() : array
+    {
+        return array_filter($this->getModelColumnComponents() , function($component)
+               {
+                   return $component instanceof CSVDropDownListColumnInfoComponent;
+               });
+    }
+
+    public function getRelationshipDbStoringValue(string $relationName , ?string $userDisplayValue = null) : string|array|null
+    {
+        if( $relationComponents = $this->getRelationshipColumnComponents()[$relationName] ?? null )
+        { 
+            $component = $relationComponents[$userDisplayValue] ?? null;
+            if($component instanceof CSVDropDownListColumnInfoComponent)
+            {
+                return $component->getDbStoringValue($userDisplayValue);
+            }
+        }
+
+        return $userDisplayValue;
+    }
+
+    public function getRelationshipDisplayValueReplacmentNeedingColumnFieldNames(string $relationName) : array
+    {
+        return array_map(function($component)
+               {
+                   return $component->getDatabaseFieldName();
+               } , $this->getRelationshipDisplayValueReplacmentNeedingColumns($relationName));
+    }
+
+    public function getRelationshipDisplayValueReplacmentNeedingColumns(string $relationName) : array
+    {
+        return array_filter($this->getRelationshipColumnComponents()[$relationName] , function($component)
+               {
+                  return $component instanceof CSVDropDownListColumnInfoComponent;
+               });
+    }
+
     public function doesItHaveRelationships() : bool
     {
         return !empty( $this->getRelationshipColumnComponents() );

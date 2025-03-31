@@ -59,7 +59,7 @@ abstract class Importer implements JsonSerializable
     protected function getFileDataCollection() : Collection
     {
         $this->openImportedDataFileForProcessing();
-        return $this->extraactFileDataToImport();
+        return $this->extractFileDataToImport();
     }
 
     /**

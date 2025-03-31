@@ -30,6 +30,10 @@ class CSVImporter extends Importer
 
     protected array $ModelFillableColumns = [];
     protected array $relationshipsFillables = [];
+    
+    protected array $modelColumnsNeedUserDisplayValueReplacement = [];
+    protected array $relationColumnsNeedUserDisplayValueReplacement = [];
+
 
     public function __construct(string $ModelClass , string $dataValidationRequestFormClass , CSVImportableFileFormatFactory $templateFactory)
     {
@@ -81,6 +85,21 @@ class CSVImporter extends Importer
         return new CSVDataFilesContentExtractor();
     }
 
+    protected function doesnModelColumnNeedUserDisplayValueReplacement(?string $userDisplayValue = null) : bool
+    {
+        return in_array($userDisplayValue , $this->modelColumnsNeedUserDisplayValueReplacement);
+    }
+
+    protected function getModelDbStoringValue(?string $userDisplayValue = null) : string|array|null
+    {
+        if($this->doesnModelColumnNeedUserDisplayValueReplacement($userDisplayValue))
+        {
+            return $this->getImportableFileFormatFactory()->getModelDbStoringValue($userDisplayValue);
+        }
+
+        return $userDisplayValue;
+    }
+
     protected function getCurrentModelFillableValues(array $row) : array
     {
         $columnsValues = [] ;
@@ -89,7 +108,8 @@ class CSVImporter extends Importer
         {
             if(isset($row[$column]))
             {
-                $columnsValues[$column] =  $row[$column] ?: null ;
+                $initValue =  $row[$column] ?: null ;
+                $columnsValues[$column] = $this->getModelDbStoringValue($initValue);
             }
         }
         return $columnsValues;
@@ -102,6 +122,12 @@ class CSVImporter extends Importer
         return $this; 
     }
 
+    protected function setModelColumnsNeedUserDisplayValueReplacement() : self
+    {
+        $this->modelColumnsNeedUserDisplayValueReplacement = $this->getImportableFileFormatFactory()->getModelDisplayValueReplacmentNeedingColumnFieldNames();
+        return $this;
+    }
+ 
     protected function getModelFillableColumns() : array
     {
         return $this->ModelFillableColumns;
@@ -110,6 +136,7 @@ class CSVImporter extends Importer
     protected function importDataRows() : void
     {
         $this->setModelFillableColumns();
+        $this->setModelColumnsNeedUserDisplayValueReplacement();
         parent::importDataRows();
     }
 

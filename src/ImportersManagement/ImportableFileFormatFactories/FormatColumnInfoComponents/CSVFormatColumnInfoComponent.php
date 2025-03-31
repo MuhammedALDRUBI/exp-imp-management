@@ -13,7 +13,7 @@ class CSVFormatColumnInfoComponent extends FormatColumnInfoComponent implements 
 
     protected string $columnCharSymbol;
     protected string $columnHeaderName; 
-    protected string $databaseFieldName ;
+    protected string $databaseFieldName ; 
     protected ?string $relationName = null;
     protected bool $prefixingColumnNameStatus = true;
     protected ?string $columnHeaderPrefix = null;
@@ -26,7 +26,7 @@ class CSVFormatColumnInfoComponent extends FormatColumnInfoComponent implements 
              ->setColumnHeaderName($columnHeaderName) 
              ->setDatabaseFieldName( $columnHeaderName);
     }
-
+ 
     // Getter and setter for $columnCharSymbol
     public function getColumnCharSymbol(): string
     {

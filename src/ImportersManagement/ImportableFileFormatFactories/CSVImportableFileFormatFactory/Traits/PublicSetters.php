@@ -37,8 +37,10 @@ trait PublicSetters
     {
         if($cellValidationSetter = $columnComponent->getCellDataValidation())
         {
-            //A1048576 is Excel's maximum row range.
-            $rowRange = $columnComponent->getColumnCharSymbol() ."1:A1048576" ;
+            $charSymbol = $columnComponent->getColumnCharSymbol();
+            //1048576 is Excel's maximum row range.
+            $rowRange =  $charSymbol ."1:" . $charSymbol . "1048576" ;
+
             $sheet = $event->sheet->getDelegate();
 
             $dataValidation = new DataValidation();
