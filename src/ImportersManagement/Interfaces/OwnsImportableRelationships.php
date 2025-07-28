@@ -11,5 +11,5 @@ interface OwnsImportableOneToOneRelationships
      * must return an array like :
      * ["info" => ["name" , "phone"] , "profile" => ]
      */
-    public function getImportableOneToOneRelationships() :  array
+    public function getImportableOneToOneRelationships() :  array;
 }

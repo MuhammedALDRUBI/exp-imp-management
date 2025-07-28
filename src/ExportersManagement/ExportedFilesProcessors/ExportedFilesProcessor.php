@@ -28,8 +28,10 @@ class ExportedFilesProcessor extends TemporaryFilesProcessor
     public function informExportedDataFilesInfoManager(string $fileRealPath) : string
     {
         /**
-         * $fileRelevantPath comming after uploading a file to the temp folder path ...it contains the tem folder names
+         * $fileRelevantPath comming after uploading a file to the temp folder path 
+         * It contains the tem folder names
          */
+        
         $this->initExportedDataFilesInfoManager();
 
         $fileName = $this->getFileDefaultName($fileRealPath); 

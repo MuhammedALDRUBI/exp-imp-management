@@ -29,12 +29,16 @@ class ImportingRejectedDataFilesInfoManager extends DataFilesInfoManager
      */
     public function addNewFileInfo(string $fileName, string $fileRealPath, string $fileRelevantPath  , int $timestamp_expiration = -1): self
     {
-        if($timestamp_expiration < 0){$timestamp_expiration = now()->addDays($this::ValidityIntervalDayCount)->getTimestamp() ;}
+        if($timestamp_expiration < 0)
+        {
+            $timestamp_expiration = now()->addDays($this::ValidityIntervalDayCount)->getTimestamp() ;
+        }
+
         $this->InfoData[$fileName] = [
-            "fileRealPath" => $fileRealPath ,
-            "fileRelevantPath" => $fileRelevantPath   ,
-            "timestamp_expiration" => $timestamp_expiration
-        ];
+                                        "fileRealPath" => $fileRealPath ,
+                                        "fileRelevantPath" => $fileRelevantPath   ,
+                                        "timestamp_expiration" => $timestamp_expiration
+                                     ];
         return $this;
     }
 

@@ -14,6 +14,7 @@ class CSVDataFilesContentExtractor extends DataFilesContentExtractor
     {
         return app()->make(PixelExcelExpImpLib::class);
     }
+    
     /**
      * @return Collection  
      * @throws IOException
@@ -22,6 +23,6 @@ class CSVDataFilesContentExtractor extends DataFilesContentExtractor
      */
     public function getData(): Collection 
     {
-        return $this->initPixelExcelExpImpLib()->import( $this->filePathToProcess ) ;
+        return $this->initPixelExcelExpImpLib()->importDataFile( $this->filePathToProcess ) ;
     }
 }

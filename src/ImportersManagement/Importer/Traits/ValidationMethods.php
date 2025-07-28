@@ -29,6 +29,7 @@ trait ValidationMethods
     {
         return StoringValidationManager::Singleton();
     }
+
     protected function setValidationManager() : self
     {
         $this->validationManager = $this->initValidationManager();
@@ -83,7 +84,8 @@ trait ValidationMethods
 
     protected function validateFileSingleDataRow(array $fileSingleRow) : void
     {
-        $this->validationManager->setValidatorData($fileSingleRow)->startGeneralValidation();
+        $this->validationManager->setValidatorData($fileSingleRow)
+                                ->startGeneralValidation();
     }
 
     protected function validateSingleModelData(array $modelData) : void

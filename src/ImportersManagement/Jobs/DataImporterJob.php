@@ -11,16 +11,15 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Http\Request;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Notifications\Notification;
+use PixelApp\Models\UsersModule\PixelUser;
 
 class DataImporterJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    
     private ?Importer $importer = null;
-    private Authenticatable $notifiable;
+    private PixelUser $notifiable;
 
     
     /**
@@ -29,7 +28,12 @@ class DataImporterJob implements ShouldQueue
      */
     public function __construct(Importer $importer )
     {
-        $this->setImporter($importer)->setNotifiable();
+        $this->setImporter($importer);
+    }
+
+    public static function firstTimeInit(Importer $importer ) : self
+    {
+        return (new static( $importer ))->setNotifiable();
     }
 
     private function setImporter(Importer $importer) : DataImporterJob
@@ -38,9 +42,17 @@ class DataImporterJob implements ShouldQueue
         return $this;
     }
 
-    private function setNotifiable() : self
+    public function setNotifiable() : self
     {
-        $this->notifiable = auth("api")->user();
+        $loggedUser = auth("api")->user();
+
+        if(!$loggedUser instanceof PixelUser)
+        {
+            throw new Exception("The logged user object is not child type of PixelUser .... Make sure that logged user type class is inhertir of PixelUser class !");
+        }
+
+        $this->notifiable =  $loggedUser;
+
         return $this;
     } 
     

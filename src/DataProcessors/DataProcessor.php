@@ -12,6 +12,7 @@ abstract class DataProcessor
     {
         return collect($data);
     }
+
     protected function convertToArray(LazyCollection | Collection | array $data)
     { 
         if($data instanceof EloquentCollection || $data instanceof LazyCollection)
@@ -40,6 +41,7 @@ abstract class DataProcessor
         { 
            $finalData[] = $this->getProcessedDataRow($dataRow);
         }
+        
         return $this->convertToCollection($finalData);
     }
 }

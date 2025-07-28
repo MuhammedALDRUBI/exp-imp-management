@@ -14,7 +14,9 @@ trait PDFExporterSerilizing
  
     protected static function DoesItHaveMissedSerlizedProps($data)
     {
-        return parent::DoesItHaveMissedSerlizedProps($data) || !array_key_exists("viewTemplateRelativePath" , $data);
+        return parent::DoesItHaveMissedSerlizedProps($data) 
+               ||
+               !array_key_exists("viewTemplateRelativePath" , $data);
     }
 
     protected function getSerlizingProps() : array

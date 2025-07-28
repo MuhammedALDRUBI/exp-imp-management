@@ -48,7 +48,8 @@ trait RelationshipImportingMethods
     {
         if($this->doesRelationColumnNeedUserDisplayValueReplacement($relationName , $columnFieldName))
         {
-            return $this->getImportableFileFormatFactory()->getRelationshipDbStoringValue($relationName , $userDisplayValue);
+            return $this->getImportableFileFormatFactory()
+                        ->getRelationshipDbStoringValue($relationName , $userDisplayValue);
         }
 
         return $userDisplayValue;
@@ -76,6 +77,7 @@ trait RelationshipImportingMethods
     protected function handleModelRelationship(Model $model , string $relationshipName , array $relationshipFillables) : void
     {
         $relationshipFillableValues = $this->getRelationshipFillableValues($relationshipName , $relationshipFillables);
+
         if(!empty($relationshipFillableValues))
         {
             if($relation = $this->initRelationObject($model , $relationshipName)) // checking relation type before doing any operation
@@ -92,7 +94,8 @@ trait RelationshipImportingMethods
         {
             $this->relationColumnsNeedUserDisplayValueReplacement[$relationshipName] 
             =
-            $this->getImportableFileFormatFactory()->getRelationshipDisplayValueReplacmentNeedingColumnFieldNames($relationshipName);
+            $this->getImportableFileFormatFactory()
+                 ->getRelationshipDisplayValueReplacmentNeedingColumnFieldNames($relationshipName);
         }
         return $this;
     }

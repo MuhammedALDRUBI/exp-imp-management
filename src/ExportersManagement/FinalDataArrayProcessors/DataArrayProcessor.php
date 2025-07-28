@@ -32,10 +32,12 @@ class DataArrayProcessor
         $model = $this->getDataCollection()->first();
         return  $this->getModelOrCollectionAttributesKeysArray($model);
     }
+
     protected function getModelDesiredColumnsIfNoData() : array
     {
         return [];
     }
+
    /**
      * @return DataArrayProcessor|ModelDesiredColumnsValidator
      */
@@ -74,6 +76,7 @@ class DataArrayProcessor
         $row[ $column ] = $this->getObjectKeyValue($column, $model );
         return $row;
     }
+
     /**
      * @param Model $model
      * @param array $row
@@ -92,6 +95,7 @@ class DataArrayProcessor
     {
         return $this->processModelDesiredColumns($model);
     }
+
     /**
      * @return Collection|LazyCollection|null
      */
@@ -118,11 +122,13 @@ class DataArrayProcessor
         foreach ($this->getDataCollection() as $model)
         {
             $row = $this->processDataRow($model);
+
             if(!empty($row))
             {
                  $finalData[] = $row; 
             }
         }
+        
         $finalData = $this->callMappingFunOnRowsArray($finalData);
         return collect($finalData);
     }

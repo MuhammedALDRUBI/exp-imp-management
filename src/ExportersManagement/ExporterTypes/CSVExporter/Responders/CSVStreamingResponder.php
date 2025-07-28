@@ -30,6 +30,7 @@ class CSVStreamingResponder extends StreamingResponder
      */
     public function respond():BinaryFileResponse | StreamedResponse | JsonResponse| string
     { 
-        return $this->pixelExpImpLib->data($this->DataCollection)->download($this->FileFullName);
+        return $this->pixelExpImpLib->setExportingData($this->DataCollection)
+                                    ->downloadDataFile($this->FileFullName);
     }
 }

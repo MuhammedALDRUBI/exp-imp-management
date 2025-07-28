@@ -24,7 +24,7 @@ abstract class CSVImportableFileFormatFactory
                implements FromCollection , WithStrictNullComparison, WithEvents, WithHeadings, WithColumnWidths, WithStyles , JsonSerializable
 {
  
-    use CSVImportableFileFormatFactorySerilizing , CSVImportableFileFormatFactorySerilizing , PublicsGetters , PublicSetters;
+    use CSVImportableFileFormatFactorySerilizing  , PublicsGetters , PublicSetters;
 
     protected ?Collection $formatDataCollection = null;
     protected string $fileName;
@@ -60,12 +60,13 @@ abstract class CSVImportableFileFormatFactory
 
     public function downloadFormat()
     {
-        return $this->initPixelExcelFormatFactoryLib()->download($this , $this->fileName , $this->writerType , $this->headers );
+        return $this->initPixelExcelFormatFactoryLib()
+                    ->downloadFile($this , $this->fileName , $this->writerType , $this->headers );
     }
     
     public function getRawContent()
     {
-        return $this->initPixelExcelFormatFactoryLib()->raw($this ,  $this->writerType );
+        return $this->initPixelExcelFormatFactoryLib()->exportFileRawContent($this ,  $this->writerType );
     }
 
     public function collection()
@@ -106,6 +107,7 @@ abstract class CSVImportableFileFormatFactory
                                                                 });
         return $this;
     }
+
     public function columnWidths(): array
     {
         $columnsWidth = [];
@@ -189,7 +191,9 @@ abstract class CSVImportableFileFormatFactory
                 foreach($this->validColumnFormatInfoCompoenents as $component)
                 {
                     $this->setColumnValidation($component, $event); 
-                    $event->sheet->getColumnDimension($component->getColumnCharSymbol())->setAutoSize(true);
+                    
+                    $event->sheet->getDelegate()
+                                 ->getColumnDimension($component->getColumnCharSymbol())->setAutoSize(true);
                 } 
 
                 $this->setFirstRowHeight($event);

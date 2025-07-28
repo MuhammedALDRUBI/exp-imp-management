@@ -2,6 +2,8 @@
 
 namespace ExpImpManagement\Interfaces;
 
+use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Collection;
 
 interface PixelExcelExpImpLib
@@ -11,9 +13,9 @@ interface PixelExcelExpImpLib
      * @param string        $path
      * @param callable|null $callback
      *
-     * @return string
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse|string
      */
-    public function download($path, callable $callback = null);
+    public function downloadDataFile($path, ?callable $callback = null) : StreamedResponse|string;
 
       /**
      * @param string        $path
@@ -21,7 +23,7 @@ interface PixelExcelExpImpLib
      *
      * @return string
      */
-    public function export($path, callable $callback = null);
+    public function exportDataFile($path, ?callable $callback = null) : string;
     
     /**
      * @param string        $path
@@ -29,12 +31,12 @@ interface PixelExcelExpImpLib
      *
      * @return Collection
      */
-    public function import($path, callable $callback = null);
+    public function importDataFile($path, ?callable $callback = null) : Collection;
 
      /**
      * Manually set data apart from the constructor.
      *
      * @param Collection|Generator|array $data 
      */
-    public function data($data);
+    public function setExportingData($data) : PixelExcelExpImpLib;
 }

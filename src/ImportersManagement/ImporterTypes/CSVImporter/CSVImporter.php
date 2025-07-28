@@ -124,7 +124,10 @@ class CSVImporter extends Importer
 
     protected function setModelColumnsNeedUserDisplayValueReplacement() : self
     {
-        $this->modelColumnsNeedUserDisplayValueReplacement = $this->getImportableFileFormatFactory()->getModelDisplayValueReplacmentNeedingColumnFieldNames();
+        $this->modelColumnsNeedUserDisplayValueReplacement
+        =
+        $this->getImportableFileFormatFactory()->getModelDisplayValueReplacmentNeedingColumnFieldNames();
+        
         return $this;
     }
  

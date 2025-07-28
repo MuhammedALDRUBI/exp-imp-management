@@ -96,8 +96,6 @@ trait DataCustomizerMethods
      */
     protected function processSingleDataRowValidation() : bool
     {
-        return true;
-
         $this->validateFileSingleDataRow($this->currentDataRow); // validate row by rules() method found in RequestForm Class
         $this->validateSingleModelData($this->currentModelFillables);
         return true; //if no exception is thrown true will be return

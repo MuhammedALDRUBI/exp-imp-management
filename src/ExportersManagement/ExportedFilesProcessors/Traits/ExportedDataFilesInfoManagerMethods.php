@@ -23,7 +23,8 @@ trait ExportedDataFilesInfoManagerMethods
     protected function informExportedDataFilesInfoManager(string $fileRelevantPath) : string
     {
         /**
-         * $fileRelevantPath comming after uploading a file to the temp folder path ...it contains the tem folder names
+         * $fileRelevantPath comming after uploading a file to the temp folder path 
+         * It contains the temp folder names
          */
         $this->initExportedDataFilesInfoManager();
 

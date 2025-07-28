@@ -73,12 +73,15 @@ class PDFExporter extends Exporter
      */
     protected function getViewToRender() : View
     {
-        return view($this->requireViewTemplateRelativePath() , ["data" => $this->DataCollection->toArray() , "keys" => $this->getViewDataKeys() ]);
+        return view(
+                     $this->requireViewTemplateRelativePath() ,
+                     ["data" => $this->DataCollection->toArray() , "keys" => $this->getViewDataKeys() ]
+                    );
     }
     
     protected function passViewToPDFLib() : self
     {
-        $this->pdfLib->loadView($this->getViewToRender());
+        $this->pdfLib->useView($this->getViewToRender());
         return $this;
     }
     
@@ -113,7 +116,10 @@ class PDFExporter extends Exporter
      */
     protected function uploadDataFileToTempPath() : string
     {
-        $tempFolderPath = $this->filesProcessor->HandleTempFileContentToCopy( $this->pdfLib->output() , $this->fileFullName )->getCopiedTempFilesFolderPath();
+        $this->filesProcessor->HandleTempFileContentToCopy( $this->pdfLib->exportDataFile() , $this->fileFullName );
+        
+        $tempFolderPath = $this->filesProcessor->getCopiedTempFilesFolderPath();
+
         return $tempFolderPath . $this->fileFullName;
     }
 

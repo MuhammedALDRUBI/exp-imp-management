@@ -24,7 +24,7 @@ class JobDispatcherJSONResponder  extends Responder
             throw new Exception("There Is No Importer Passed To Job Object");
         }
         
-        return new DataImporterJob($this->importer);
+        return DataImporterJob::firstTimeInit($this->importer);
     }
 
     public function setImporter(Importer $importer): self

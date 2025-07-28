@@ -30,7 +30,10 @@ abstract class DataFilesInfoManager extends FilesInfoDataManager
 
     public function removeExpiredFilesInfo(array $fileNamesArray = []) : self
     {
-        if(empty($fileNamesArray)){$fileNamesArray = $this->getExpiredFileNames();}
+        if(empty($fileNamesArray))
+        {
+            $fileNamesArray = $this->getExpiredFileNames();
+        }
 
         foreach ($fileNamesArray as $fileName)
         {

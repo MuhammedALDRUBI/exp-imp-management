@@ -35,6 +35,7 @@ class JobDispatcherJSONResponder  extends Responder
         $this->exporter = $exporter;
         return $this;
     }
+
     protected function dispatchJob(HugeDataExporterJob $job)
     {
         dispatch($job);
@@ -52,10 +53,7 @@ class JobDispatcherJSONResponder  extends Responder
     {  
         // if(!$this->exporterClass){throw new Exception("There Is No Exporter Class Given To Job Object");}
         // if(!$this->exporter){throw new Exception("There Is No Exporter Passed To Job Object");}
-        return  new HugeDataExporterJob( $this->exporter
-            //$this->exporterClass
-        // , request()
-        );
+        return  HugeDataExporterJob::firstTimeInit( $this->exporter);
     }
 
     protected function getHugeDataExporterJob() : HugeDataExporterJob
@@ -64,13 +62,15 @@ class JobDispatcherJSONResponder  extends Responder
     //    $this->setHugeDataExporterJobProps($job);
         return $job;
     }
+
     /**
      * @return BinaryFileResponse|StreamedResponse|JsonResponse | string
      */
     public function respond():BinaryFileResponse | StreamedResponse | JsonResponse | string
     {
         $job = $this->getHugeDataExporterJob();
-       $this->dispatchJob($job);
+        $this->dispatchJob($job);
+
         return Response::success([] , ["The Needed Data Is In Large Size , You Will Receive The Needed Data Files On Your Email !"]);
     }
 

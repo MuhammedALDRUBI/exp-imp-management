@@ -38,11 +38,10 @@ trait FileNameProccessing
     public function composeFileName(string $documentTitle) : string
     {
         $name = $this->sanitizeFileCustomName($documentTitle);
+
         return $this->outoutUniqueDocumentTitle 
-               ? 
-               Str::slug( $name , "_") .  date("_Y_m_d_his") 
-               :
-               $name;
+               ? Str::slug( $name , "_") .  date("_Y_m_d_his") 
+               : $name;
     }
 
     protected function sanitizeFileCustomName(string $name) : string
@@ -66,7 +65,8 @@ trait FileNameProccessing
      */
     protected function setFileNames(string $documentTitle) : void
     {
-        $this->setFileName($documentTitle)->setFileFullName();
+        $this->setFileName($documentTitle)
+             ->setFileFullName();
     }
 
 

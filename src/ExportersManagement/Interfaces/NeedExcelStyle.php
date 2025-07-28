@@ -4,6 +4,6 @@ namespace ExpImpManagement\ExportersManagement\Interfaces;
 
 interface NeedExcelStyle
 {
-    public function setHeaderStyle( $style);
-    public function setRowStyle( $style);
+    public function setHeaderStyle( $style)  :NeedExcelStyle;
+    public function setRowStyle( $style) : NeedExcelStyle;
 }

@@ -49,8 +49,11 @@ abstract class Exporter  implements JsonSerializable
      */
     protected function setFilesProcessor(): self
     {
-        if($this->filesProcessor){return $this;}
-        $this->filesProcessor = new ExportedFilesProcessor();
+        if(!$this->filesProcessor)
+        {
+            $this->filesProcessor = new ExportedFilesProcessor();
+        }
+
         return $this;
     }
 
@@ -75,13 +78,15 @@ abstract class Exporter  implements JsonSerializable
         } 
         return $this->initStreamingResponder();
     }
+
     /**
      * @return $this
      * @throws Exception
      */
     protected function initExporter() : self
     { 
-        if( $this->DataCollection == null) //if there is a DataCollection ... it is set manually in the controller context class ... no need to fetch it twice
+        //if there is a DataCollection ... it is set manually in the controller context class ... no need to fetch it twice
+        if( $this->DataCollection == null) 
         { 
             $this->prepareQueryBuilder();
             $this->setNeededDataCount();
@@ -101,13 +106,20 @@ abstract class Exporter  implements JsonSerializable
         return $this->setDefaultDataCollection();
     }
  
+    protected function getExportedFileDownloadingExpirationTime()  :int
+    {
+        return now()->addDays(ExportedDataFilesInfoManager::ValidityIntervalDayCount)->getTimestamp() ;
+    }
+
     protected function generateFileAssetURL(string $fileName) : string
     {
+        $signatureExpiration = $this->getExportedFileDownloadingExpirationTime();
+
         return URL::temporarySignedRoute(
-                "exported-file-downloading" ,
-                      now()->addDays(ExportedDataFilesInfoManager::ValidityIntervalDayCount)->getTimestamp() ,
-                     ["fileName" => $fileName]
-                );
+                                            "exported-file-downloading" ,
+                                            $signatureExpiration ,
+                                            ["fileName" => $fileName]
+                                        );
     }
  
     /**

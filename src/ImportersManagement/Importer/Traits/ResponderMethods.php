@@ -20,6 +20,7 @@ trait ResponderMethods
     {
         $responder->setImporter($this); 
     }
+    
     /**
      * @throws Exception
      */

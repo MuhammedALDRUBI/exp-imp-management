@@ -34,6 +34,7 @@ class CSVExporter extends Exporter
         $this->initPixelExcelExpImpLib(); 
         return $this;
     }
+
     protected function initPixelExcelExpImpLib() : void
     {
         $this->pixelExpImpLib = app()->make(PixelExcelExpImpLib::class );
@@ -136,10 +137,11 @@ class CSVExporter extends Exporter
      */
     protected function uploadDataFileToTempPath() : string
     {
-        $tempFolderPath = $this->filesProcessor->HandleTempFileToCopy(
-                                                                        $this->pixelExpImpLib->data($this->DataCollection)->export( $this->fileFullName ),
-                                                                        $this->fileFullName
-                                                                    )->copyToTempPath();
+        $exportedDataFilePath = $this->pixelExpImpLib->setExportingData($this->DataCollection)->exportDataFile( $this->fileFullName );
+
+        $tempFolderPath = $this->filesProcessor->HandleTempFileToCopy($exportedDataFilePath, $this->fileFullName)
+                                               ->copyToTempPath();
+
         return $tempFolderPath . $this->fileFullName;
     }
 

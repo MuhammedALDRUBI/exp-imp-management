@@ -26,7 +26,10 @@ class ColumnDropDownListValueArrayHandler
 
     public function handleColumnDropDownListValue(ColumnDropDownListValue $value) : self
     {
-        return $this->addColumnDropDownListValue($value->getUserDisplayValue(), $value->getDbStoringValue());
+        return $this->addColumnDropDownListValue(
+                                                    $value->getUserDisplayValue(),
+                                                    $value->getDbStoringValue()
+                                                );
     }
 
     public function add_UserDisplay_DbValue_OptionsArray(array $options) : self

@@ -31,6 +31,7 @@ trait DataImportingHooks
          */
         DB::rollBack(); 
     }
+    
     protected function startDataRowImportingDBTransaction() : void
     {
         DB::beginTransaction();

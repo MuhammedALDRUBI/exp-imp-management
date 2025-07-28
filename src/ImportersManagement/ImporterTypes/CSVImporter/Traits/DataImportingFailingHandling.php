@@ -7,7 +7,11 @@ use ExpImpManagement\DataFilesInfoManagers\ImportingDataFilesInfoManagers\Import
 use ExpImpManagement\ImportersManagement\Notifications\RejectedDataFileNotifier;
 use Illuminate\Support\Facades\URL; 
 use Illuminate\Notifications\Notification;
+use ExpImpManagement\ImportersManagement\ImportingFilesProcessors\CSVImportingFilesProcessor;
 
+/**
+ * @property CSVImportingFilesProcessor $filesProcessor
+ */
 trait DataImportingFailingHandling
 {
     use DataImportHookExtension;
@@ -28,13 +32,23 @@ trait DataImportingFailingHandling
 
     protected function getRejectedFileContent() : string
     {
-        return $this->getImportableFileFormatFactory()->setDataFileToManuallyChange( $this->dataToManuallyChange )->getRawContent() ?? "";
+        return $this->getImportableFileFormatFactory()
+                    ->setDataFileToManuallyChange( $this->dataToManuallyChange )
+                    ->getRawContent() 
+                    ?? "";
     }
 
     protected function processRejectedDataFile($fileContent) : void
     {  
-        $this->filesProcessor->HandleTempFileContentToCopy($fileContent , $this->rejectedDataFileName); 
-        $this->filesProcessor->informImportingRejectedDataFilesInfoManager($this->rejectedDataFileName , $this->rejectedDataFilePath); 
+        $this->filesProcessor->HandleTempFileContentToCopy(
+                                                              $fileContent ,
+                                                              $this->rejectedDataFileName
+                                                          ); 
+
+        $this->filesProcessor->informImportingRejectedDataFilesInfoManager(
+                                                                               $this->rejectedDataFileName ,
+                                                                               $this->rejectedDataFilePath
+                                                                          ); 
     }
 
     protected function composeRejectedFilePath() : string

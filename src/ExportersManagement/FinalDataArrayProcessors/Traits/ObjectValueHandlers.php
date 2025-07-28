@@ -36,8 +36,16 @@ trait ObjectValueHandlers
 
     protected function getCollectionModel(Collection | Model | null $modelOrCollection = null) :  Model | null
     {
-        if(!$modelOrCollection){return null;}
-        if($modelOrCollection instanceof Collection) {$modelOrCollection = $modelOrCollection->first();}
+        if(!$modelOrCollection)
+        {
+                return null;
+        }
+
+        if($modelOrCollection instanceof Collection) 
+        {
+            $modelOrCollection = $modelOrCollection->first();
+        }
+
         return $modelOrCollection;
     }
 
@@ -80,7 +88,8 @@ trait ObjectValueHandlers
 
         return $object->map(function ($row) use ( $keys)
         {
-            return $row->only($keys);
+            return $this->getObjectKeysValues($keys , $row);
+
         })->toArray();
     }
 
@@ -92,16 +101,26 @@ trait ObjectValueHandlers
      */
     protected function getObjectKeyValue(string | array $keyName , Model | Collection | array | null $object) : string | null
     {
-        if(!$object ){return null;}
-        if($object instanceof Model) { return  $object->{$keyName}; }
+        if(!$object )
+        {
+            return null;
+        }
+
+        if($object instanceof Model)
+        {
+             return  $object->{$keyName}; 
+        }
 
         //If Object is An array
-        if(is_array($object)) { return $object[$keyName] ?? null; }
+        if(is_array($object)) 
+        {
+             return $object[$keyName] ?? null; 
+        }
 
         //If Object Is a Collection
         return $object->map(function ($row) use ($keyName)
         {
-            if($row->{$keyName}){return $row->{$keyName};}
+            return $this->getObjectKeyValue($keyName , $row);
         })->join(" , ");
     }
 

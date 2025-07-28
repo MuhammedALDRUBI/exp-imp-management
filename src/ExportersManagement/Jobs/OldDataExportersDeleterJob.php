@@ -26,6 +26,7 @@ class OldDataExportersDeleterJob implements ShouldQueue
    protected ?ExportedDataFilesInfoManager $dataFilesInfoManager = null;
 
    protected array $successfullyDeletedFilesNames = [];
+
     /**
      * @return $this
      */
@@ -35,6 +36,7 @@ class OldDataExportersDeleterJob implements ShouldQueue
                                    ->SaveChanges();
         return $this;
     }
+    
     /**
      * @return $this 
      */

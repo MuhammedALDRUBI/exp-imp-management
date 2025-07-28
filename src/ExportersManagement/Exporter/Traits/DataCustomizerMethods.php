@@ -61,7 +61,11 @@ trait DataCustomizerMethods
      */
     protected function setModelPrimaryKeyName($modelClass): self
     {
+        /**
+         * @var Model $model
+         */
         $model = new $modelClass;
+
         $this->modelPrimaryKeyName = $model->getKeyName();
         unset($model);
         return $this;
@@ -73,7 +77,7 @@ trait DataCustomizerMethods
      */
     public function setModelClass(string $modelClass) : self
     {   
-        if(!is_subclass_of($modelClass , Model::class))
+        if(! is_subclass_of($modelClass , Model::class) )
         {
             throw new Exception("The passed Model class is not a model type !");
         } 
@@ -218,7 +222,8 @@ trait DataCustomizerMethods
  
     public function useDataProcessor(DataProcessor $dataProcessor) : self
     { 
-        $this->setDataProcessorClass( get_class($dataProcessor) ) ;//needed only for serilizing & unserilizing to keep the custom DataProcessor the user passed in context
+        //needed only for serilizing & unserilizing to keep the custom DataProcessor the user passed in context
+        $this->setDataProcessorClass( get_class($dataProcessor) ) ;
         $this->dataProcessor = $dataProcessor;
         return $this;
     }
@@ -343,7 +348,9 @@ trait DataCustomizerMethods
     { 
         if($DataCollection)
         {
-            $this->setNeededDataCount($DataCollection->count())->setDataCollection($DataCollection)->processDataCollection();
+            $this->setNeededDataCount($DataCollection->count())
+                 ->setDataCollection($DataCollection)
+                 ->processDataCollection();
         }
         return $this;
     }

@@ -27,14 +27,19 @@ class CSVImportableDataProcessor extends ImportableDataProcessor
     {
         return $this->factory;
     } 
+
     protected function appendRelationshipProps(array $dataRow , array &$processedDataRow) : void
     {
-        foreach($this->getCSVImportableFileFormatFactory()->getRelationshipColumnComponents() as $relationshipName => $columnComponents)
+        $relationshipColumnComponents = $this->getCSVImportableFileFormatFactory()->getRelationshipColumnComponents();
+        
+        foreach($relationshipColumnComponents as $relationshipName => $columnComponents)
         {
             $relationshipData = [];
             foreach($columnComponents as $columnComponent)
             {
-                $relationshipData[ $columnComponent->getDatabaseFieldName() ] = $dataRow[ $columnComponent->getColumnHeaderName() ] ?? null;
+                $relationshipData[ $columnComponent->getDatabaseFieldName() ] 
+                =
+                $dataRow[ $columnComponent->getColumnHeaderName() ] ?? null;
             }
 
             $processedDataRow[$relationshipName] = $relationshipData;
@@ -46,8 +51,11 @@ class CSVImportableDataProcessor extends ImportableDataProcessor
         $modelProps = [];
         foreach($this->getCSVImportableFileFormatFactory()->getModelColumnComponents() as $columnComponent)
         {
-            $modelProps[ $columnComponent->getDatabaseFieldName() ] = $dataRow[ $columnComponent->getColumnHeaderName() ] ?? null;
+            $modelProps[ $columnComponent->getDatabaseFieldName() ] 
+            =
+            $dataRow[ $columnComponent->getColumnHeaderName() ] ?? null;
         }
+        
         return $modelProps; 
     }
 

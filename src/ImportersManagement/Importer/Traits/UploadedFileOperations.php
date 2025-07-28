@@ -3,9 +3,13 @@
 namespace ExpImpManagement\ImportersManagement\Importer\Traits;
  
 use ExpImpManagement\ImportersManagement\Importer\Importer;  
+use ExpImpManagement\ImportersManagement\ImportingFilesProcessors\ImportingFilesProcessor;
 use Exception;
 use Illuminate\Http\UploadedFile;
 
+/**
+ * @property ?ImportingFilesProcessor $filesProcessor
+ */
 trait UploadedFileOperations
 {   
     protected ?UploadedFile     $uploadedFile = null; 
@@ -16,12 +20,16 @@ trait UploadedFileOperations
     protected function uploadToImportedFilesTempFolder(string $UploadedFileFullName)  : string
     { 
         
-        $tempFolderPath = $this->filesProcessor->HandleTempFileToCopy(
-                                                                        $this->uploadedFile->getRealPath() ,
-                                                                        $UploadedFileFullName
-                                                                    )->copyToTempPath(); 
+        $this->filesProcessor->HandleTempFileToCopy(
+                                                        $this->uploadedFile->getRealPath() ,
+                                                        $UploadedFileFullName
+                                                   );
+
+        $tempFolderPath = $this->filesProcessor->copyToTempPath(); 
+
         return $tempFolderPath . $UploadedFileFullName;
     } 
+
     /**
      * @return string
      * @throws JsonException
@@ -78,7 +86,10 @@ trait UploadedFileOperations
      */
     protected function HandleUploadedFile() : Importer
     {
-        return $this->validateUploadedFile()->setUploadedFile()->setUploadedFileFullName()->setUploadedFileTempRealPath() ; 
+        return $this->validateUploadedFile()
+                    ->setUploadedFile()
+                    ->setUploadedFileFullName()
+                    ->setUploadedFileTempRealPath() ; 
     }
  
    protected function isUploadedFileExistInTempPath() : bool

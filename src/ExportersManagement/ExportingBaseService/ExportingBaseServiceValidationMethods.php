@@ -9,7 +9,6 @@ use ValidatorLib\Validator;
 
 trait ExportingBaseServiceValidationMethods
 {
-
     protected Validator $validator;
     protected array $data;
 
@@ -22,6 +21,7 @@ trait ExportingBaseServiceValidationMethods
     {
         $this->data = $this->validator->getRequestData();
     }
+
     /**
      * @throws Exception
      */

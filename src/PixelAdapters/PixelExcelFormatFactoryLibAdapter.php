@@ -4,6 +4,7 @@ namespace ExpImpManagement\PixelAdapters;
 
 use ExpImpManagement\Interfaces\PixelExcelFormatFactoryLib;
 use Maatwebsite\Excel\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PixelExcelFormatFactoryLibAdapter extends Excel implements PixelExcelFormatFactoryLib
 {
@@ -19,4 +20,21 @@ class PixelExcelFormatFactoryLibAdapter extends Excel implements PixelExcelForma
      * so any new adapter must handle it while recieving a CSVImportableFileFormatFactory instance (this adapter does that already) 
      * 
      */
+
+
+    public function downloadFile($export, string $fileName, ?string $writerType = null, array $headers = []) : BinaryFileResponse
+    {
+        return $this->download($export , $fileName , $writerType , $headers);
+    }
+
+    
+    /**
+     * Must export a file and return its raw contentt without storing or streaming it 
+     */
+    public function exportFileRawContent($export, string $writerType) : string
+    {
+        return $this->raw($export , $writerType);
+    }
+
+
 }

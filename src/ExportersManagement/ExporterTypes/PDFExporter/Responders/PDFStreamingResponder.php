@@ -24,6 +24,6 @@ class PDFStreamingResponder extends StreamingResponder
      */
     public function respond():BinaryFileResponse | StreamedResponse | JsonResponse| string
     {
-        return $this->PDFLib->stream( $this->FileFullName );
+        return $this->PDFLib->downloadDataFile( $this->FileFullName );
     }
 }
