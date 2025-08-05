@@ -3,6 +3,9 @@
 namespace ExpImpManagement\DataFilesInfoManagers\ExportedDataFilesInfoManager;
 
 use ExpImpManagement\DataFilesInfoManagers\DataFilesInfoManager;
+use ExpImpManagement\ExportersManagement\Exporter\Exporter;
+use ExpImpManagement\ExportersManagement\Jobs\OldDataExportersDeleterJob;
+use Illuminate\Console\Scheduling\Schedule;
 
 class ExportedDataFilesInfoManager extends DataFilesInfoManager
 {
@@ -107,4 +110,15 @@ class ExportedDataFilesInfoManager extends DataFilesInfoManager
         return $files;
     }
 
+    protected function getOldDataExportersDeleterJobClass() : string
+    {
+        return Exporter::getOldDataExportersDeleterJobClass() ?? OldDataExportersDeleterJob::class;
+    }
+
+    public static function sceduleOldDataExportersDeleterJob(Schedule $schedule) : void
+    {
+        $jobClass = static::getOldDataExportersDeleterJobClass();
+
+        $schedule->job( $jobClass )->daily()->at('00:00');
+    }
 }

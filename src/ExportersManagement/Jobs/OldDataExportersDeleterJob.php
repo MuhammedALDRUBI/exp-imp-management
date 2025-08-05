@@ -27,6 +27,16 @@ class OldDataExportersDeleterJob implements ShouldQueue
 
    protected array $successfullyDeletedFilesNames = [];
 
+   
+    /**
+     * @return void
+     * @throws Exception
+     */
+    public function handle()
+    {
+        $this->processDeleting();
+    }
+
     /**
      * @return $this
      */
@@ -74,13 +84,10 @@ class OldDataExportersDeleterJob implements ShouldQueue
         }
         return $this;
     }
- 
-    /**
-     * @return void
-     * @throws Exception
-     */
-    public function handle()
+
+    protected function processDeleting() : void
     {
         $this->initCustomFileDeleter()->initDataFilesInfoManager()->DeleteMustDeletedFiles();
     }
+
 }

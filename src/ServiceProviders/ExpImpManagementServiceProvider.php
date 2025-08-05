@@ -1,7 +1,8 @@
 <?php
 
 namespace ExpImpManagement\ServiceProviders;
- 
+
+use ExpImpManagement\DataFilesInfoManagers\ExportedDataFilesInfoManager\ExportedDataFilesInfoManager;
 use ExpImpManagement\Interfaces\PixelExcelExpImpLib;
 use ExpImpManagement\Interfaces\PixelExcelFormatFactoryLib;
 use ExpImpManagement\PixelAdapters\PixelExcelExpImpLibAdapter;
@@ -12,6 +13,7 @@ use Maatwebsite\Excel\QueuedWriter;
 use Maatwebsite\Excel\Writer;
 use Maatwebsite\Excel\Reader;
 use PixelDomPdf\Interfaces\PixelPdfNeedsProvider;
+use Illuminate\Console\Scheduling\Schedule;
 
 class ExpImpManagementServiceProvider extends ServiceProvider
 {
@@ -19,9 +21,8 @@ class ExpImpManagementServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->loadPackageRoutes();
-        //scedule OldDataExportersDeleterJob job here also
-        
 
+        $this->sceduleOldDataExportersDeleterJob();
     }
     
     protected function loadPackageRoutes() : void
@@ -69,5 +70,13 @@ class ExpImpManagementServiceProvider extends ServiceProvider
                                                         );
         });
     }
-    
+
+    protected function sceduleOldDataExportersDeleterJob()  :void
+    {
+        $this->app->booted(function ()
+        {
+            $schedule = $this->app->make(Schedule::class);
+            ExportedDataFilesInfoManager::sceduleOldDataExportersDeleterJob($schedule);
+        });
+    }
 }

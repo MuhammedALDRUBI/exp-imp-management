@@ -11,7 +11,9 @@ use ExpImpManagement\ExportersManagement\Responders\Responder;
 use Exception;
 use ExpImpManagement\ExportersManagement\Exporter\Traits\ExporterSerilizing;
 use ExpImpManagement\ExportersManagement\Exporter\Traits\FileNameProccessing;
-use ExpImpManagement\ExportersManagement\Exporter\Traits\ResponderMethods; 
+use ExpImpManagement\ExportersManagement\Exporter\Traits\OldDataExportersDeleterJobMethods;
+use ExpImpManagement\ExportersManagement\Exporter\Traits\ResponderMethods;
+use ExpImpManagement\ExportersManagement\Jobs\OldDataExportersDeleterJob;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\URL;
@@ -20,7 +22,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 abstract class Exporter  implements JsonSerializable
 {
-    use DataCustomizerMethods  , ExporterAbstractMethods , ResponderMethods , ExporterSerilizing , FileNameProccessing;
+    use DataCustomizerMethods  ,
+        ExporterAbstractMethods ,
+        ResponderMethods ,
+        ExporterSerilizing ,
+        FileNameProccessing,
+        OldDataExportersDeleterJobMethods;
 
     /**
      * @var string
@@ -56,7 +63,6 @@ abstract class Exporter  implements JsonSerializable
 
         return $this;
     }
-
 
     /**
      * @throws Exception
