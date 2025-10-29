@@ -130,7 +130,7 @@ trait PublicsGetters
 
     public function getModelDatabaseFields() : array
     {
-        return $this->getModelHeadings();
+        return array_keys($this->getModelHeadings());
     }
 
     public function getModelHeadings() : array
