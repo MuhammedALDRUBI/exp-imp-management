@@ -25,12 +25,11 @@ class CSVBooleanSelectingColumnInfo extends CSVDropDownListColumnInfoComponent
         return ColumnDropDownListValueArrayHandler::create();
     }
 
-    protected function getValueOptionArrayHandler( string $trueCaseDisplayValue ,string $falseCaseDisplayValue) : self
+    protected function getValueOptionArrayHandler( string $trueCaseDisplayValue ,string $falseCaseDisplayValue) : ColumnDropDownListValueArrayHandler
     {
         $handler = $this->initColumnDropDownListValueArrayHandler();
         $valueOptions = $this->composeValueOptionsArray($trueCaseDisplayValue , $falseCaseDisplayValue);
-        $handler->add_UserDisplay_DbValue_OptionsArray($valueOptions);
-        return $this;
+        return $handler->add_UserDisplay_DbValue_OptionsArray($valueOptions);
     }
  
  
