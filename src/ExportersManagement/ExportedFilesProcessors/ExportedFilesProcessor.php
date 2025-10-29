@@ -2,16 +2,16 @@
 
 namespace ExpImpManagement\ExportersManagement\ExportedFilesProcessors;
 
-
-use ExpImpManagement\ExportersManagement\ExportedFilesProcessors\Traits\ExportedDataFilesInfoManagerMethods;
+use Illuminate\Console\Scheduling\Schedule;
+use CustomFileSystem\CustomFileHandler;
 use TemporaryFilesHandlers\TemporaryFilesProcessors\TemporaryFilesProcessor;
 use ExpImpManagement\DataFilesInfoManagers\ExportedDataFilesInfoManager\ExportedDataFilesInfoManager;
+use ExpImpManagement\ExportersManagement\Exporter\Exporter;
+use ExpImpManagement\ExportersManagement\Jobs\OldDataExportersDeleterJob;
 
 class ExportedFilesProcessor extends TemporaryFilesProcessor
 {
     protected string $TempFilesFolderName = "tempFiles/ExportedTempFiles";
-
-    use  ExportedDataFilesInfoManagerMethods;
 
     protected ?ExportedDataFilesInfoManager $exportedDataFilesInfoManager = null;
 
@@ -25,21 +25,50 @@ class ExportedFilesProcessor extends TemporaryFilesProcessor
         return $this;
     }
 
-    public function informExportedDataFilesInfoManager(string $fileRealPath) : string
+    public function informFilesInfoManagerUsingRealPath(string $fileRealPath) : string
     {
-        /**
-         * $fileRelevantPath comming after uploading a file to the temp folder path 
-         * It contains the tem folder names
-         */
         
         $this->initExportedDataFilesInfoManager();
 
         $fileName = $this->getFileDefaultName($fileRealPath); 
+        
+        /**
+         * $fileRelevantPath comming after uploading a file to the temp folder path 
+         * It contains the tem folder names
+         */
 
         $fileRelevantPath = $this->getTempFileRelevantPath($fileName) ;
 
         return $this->exportedDataFilesInfoManager->addNewFileInfo( $fileName , $fileRealPath , $fileRelevantPath )
                                                   ->SaveChanges();
     }
- 
+
+    protected function informFilesInfoManagerUsingRelaventPath(string $fileRelevantPath) : string
+    {
+        /**
+         * $fileRelevantPath comming after uploading a file to the temp folder path 
+         * It contains the temp folder names
+         */
+        $this->initExportedDataFilesInfoManager();
+
+        $fileName = $this->getFileDefaultName($fileRelevantPath); 
+
+        $fileRealPath = CustomFileHandler::getFileStoragePath($fileRelevantPath , $this->tempFilesDisk);
+
+        return $this->exportedDataFilesInfoManager->addNewFileInfo( $fileName , $fileRealPath , $fileRelevantPath )
+                                                  ->SaveChanges();
+    }
+    
+    protected function getOldDataExportersDeleterJobClass() : string
+    {
+        return Exporter::getOldDataExportersDeleterJobClass() ?? OldDataExportersDeleterJob::class;
+    }
+
+    public static function sceduleOldDataExportersDeleterJob(Schedule $schedule) : void
+    {
+        $jobClass = static::getOldDataExportersDeleterJobClass();
+
+        $schedule->job( $jobClass )->daily()->at('00:00');
+    }
+
 }

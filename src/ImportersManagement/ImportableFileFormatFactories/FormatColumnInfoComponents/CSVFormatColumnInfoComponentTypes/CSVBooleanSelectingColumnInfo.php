@@ -17,7 +17,7 @@ class CSVBooleanSelectingColumnInfo extends CSVDropDownListColumnInfoComponent
 
     protected function composeValueOptionsArray(  string $trueCaseDisplayValue ,string $falseCaseDisplayValue) : array
     {
-        return [ $trueCaseDisplayValue => "1"  , $falseCaseDisplayValue => "0"] ;
+        return [ $trueCaseDisplayValue => 1  , $falseCaseDisplayValue => 0] ;
     }
 
     protected function initColumnDropDownListValueArrayHandler() : ColumnDropDownListValueArrayHandler

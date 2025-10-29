@@ -151,7 +151,7 @@ abstract class Exporter  implements JsonSerializable
     public function exportingJobFun() : string
     {
         $this->finalFilePath = $this->prepareDataFileToUpload();
-        $this->filesProcessor->informExportedDataFilesInfoManager($this->finalFilePath); 
+        $this->filesProcessor->informFilesInfoManagerUsingRealPath($this->finalFilePath); 
         
         return $this->generateFileAssetURL(
                                                 // geting the name after the child class handled it by setDataFileToExportedFilesProcessor()

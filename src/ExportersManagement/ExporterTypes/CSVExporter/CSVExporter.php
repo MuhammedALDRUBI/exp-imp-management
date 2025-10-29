@@ -137,7 +137,9 @@ class CSVExporter extends Exporter
      */
     protected function uploadDataFileToTempPath() : string
     {
-        $exportedDataFilePath = $this->pixelExpImpLib->setExportingData($this->DataCollection)->exportDataFile( $this->fileFullName );
+        $exportedDataFilePath = $this->pixelExpImpLib
+                                     ->setExportingData($this->DataCollection)
+                                     ->exportDataFile( $this->fileFullName );
 
         $tempFolderPath = $this->filesProcessor->HandleTempFileToCopy($exportedDataFilePath, $this->fileFullName)
                                                ->copyToTempPath();

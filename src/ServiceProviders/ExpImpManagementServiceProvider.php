@@ -2,7 +2,7 @@
 
 namespace ExpImpManagement\ServiceProviders;
 
-use ExpImpManagement\DataFilesInfoManagers\ExportedDataFilesInfoManager\ExportedDataFilesInfoManager;
+use ExpImpManagement\ExportersManagement\ExportedFilesProcessors\ExportedFilesProcessor;
 use ExpImpManagement\Interfaces\PixelExcelExpImpLib;
 use ExpImpManagement\Interfaces\PixelExcelFormatFactoryLib;
 use ExpImpManagement\PixelAdapters\PixelExcelExpImpLibAdapter;
@@ -76,7 +76,7 @@ class ExpImpManagementServiceProvider extends ServiceProvider
         $this->app->booted(function ()
         {
             $schedule = $this->app->make(Schedule::class);
-            ExportedDataFilesInfoManager::sceduleOldDataExportersDeleterJob($schedule);
+            ExportedFilesProcessor::sceduleOldDataExportersDeleterJob($schedule);
         });
     }
 }
