@@ -11,9 +11,7 @@ use ExpImpManagement\ExportersManagement\Responders\Responder;
 use Exception;
 use ExpImpManagement\ExportersManagement\Exporter\Traits\ExporterSerilizing;
 use ExpImpManagement\ExportersManagement\Exporter\Traits\FileNameProccessing;
-use ExpImpManagement\ExportersManagement\Exporter\Traits\OldDataExportersDeleterJobMethods;
-use ExpImpManagement\ExportersManagement\Exporter\Traits\ResponderMethods;
-use ExpImpManagement\ExportersManagement\Jobs\OldDataExportersDeleterJob;
+use ExpImpManagement\ExportersManagement\Exporter\Traits\ResponderMethods; 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\URL;
@@ -22,12 +20,13 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 abstract class Exporter  implements JsonSerializable
 {
-    use DataCustomizerMethods  ,
-        ExporterAbstractMethods ,
-        ResponderMethods ,
-        ExporterSerilizing ,
-        FileNameProccessing,
-        OldDataExportersDeleterJobMethods;
+    use DataCustomizerMethods  , ExporterAbstractMethods , ResponderMethods , ExporterSerilizing , FileNameProccessing;
+
+    /**
+     * @var string
+     * Document Title
+     */
+    protected string $documentTitle = "";
 
     /**
      * @var string
@@ -56,13 +55,11 @@ abstract class Exporter  implements JsonSerializable
      */
     protected function setFilesProcessor(): self
     {
-        if(!$this->filesProcessor)
-        {
-            $this->filesProcessor = new ExportedFilesProcessor();
-        }
-
+        if($this->filesProcessor){return $this;}
+        $this->filesProcessor = new ExportedFilesProcessor();
         return $this;
     }
+
 
     /**
      * @throws Exception
@@ -70,6 +67,7 @@ abstract class Exporter  implements JsonSerializable
     public function __construct(?string $modelClass = null) 
     {
         $this->setModelClassOptinally($modelClass);
+        
     }
 
     /**
@@ -85,14 +83,18 @@ abstract class Exporter  implements JsonSerializable
         return $this->initStreamingResponder();
     }
 
+    public function getDocumentTitle() : string
+    {
+        return $this->documentTitle;
+    }
+    
     /**
      * @return $this
      * @throws Exception
      */
     protected function initExporter() : self
     { 
-        //if there is a DataCollection ... it is set manually in the controller context class ... no need to fetch it twice
-        if( $this->DataCollection == null) 
+        if( $this->DataCollection == null) //if there is a DataCollection ... it is set manually in the controller context class ... no need to fetch it twice
         { 
             $this->prepareQueryBuilder();
             $this->setNeededDataCount();
@@ -112,20 +114,13 @@ abstract class Exporter  implements JsonSerializable
         return $this->setDefaultDataCollection();
     }
  
-    protected function getExportedFileDownloadingExpirationTime()  :int
-    {
-        return now()->addDays(ExportedDataFilesInfoManager::ValidityIntervalDayCount)->getTimestamp() ;
-    }
-
     protected function generateFileAssetURL(string $fileName) : string
     {
-        $signatureExpiration = $this->getExportedFileDownloadingExpirationTime();
-
         return URL::temporarySignedRoute(
-                                            "exported-file-downloading" ,
-                                            $signatureExpiration ,
-                                            ["fileName" => $fileName]
-                                        );
+                "exported-file-downloading" ,
+                      now()->addDays(ExportedDataFilesInfoManager::ValidityIntervalDayCount)->getTimestamp() ,
+                     ["fileName" => $fileName]
+                );
     }
  
     /**
@@ -151,7 +146,7 @@ abstract class Exporter  implements JsonSerializable
     public function exportingJobFun() : string
     {
         $this->finalFilePath = $this->prepareDataFileToUpload();
-        $this->filesProcessor->informFilesInfoManagerUsingRealPath($this->finalFilePath); 
+        $this->filesProcessor->informExportedDataFilesInfoManager($this->finalFilePath); 
         
         return $this->generateFileAssetURL(
                                                 // geting the name after the child class handled it by setDataFileToExportedFilesProcessor()
@@ -167,6 +162,7 @@ abstract class Exporter  implements JsonSerializable
     {
         try {
             $this->setFileNames($documentTitle);
+ 
             $this->initExporter();
             return $this->getConvenientResponder()->respond(); 
         }catch(Exception $e)
