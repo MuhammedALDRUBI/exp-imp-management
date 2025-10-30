@@ -7,6 +7,6 @@ use ExpImpManagement\ImportersManagement\ImportableFileFormatFactories\CSVImport
 interface ExportsCSVImportableData
 {
 
-    public function getCSVImportableFileFormatFactory() : CSVImportableFileFormatFactory
+    public function getCSVImportableFileFormatFactory() : CSVImportableFileFormatFactory;
     
 }

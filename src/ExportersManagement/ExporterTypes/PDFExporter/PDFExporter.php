@@ -2,6 +2,7 @@
 
 namespace ExpImpManagement\ExportersManagement\ExporterTypes\PDFExporter;
 
+use Illuminate\Support\Str;
 use ExpImpManagement\ExportersManagement\Exporter\Exporter; 
 use ExpImpManagement\ExportersManagement\ExporterTypes\PDFExporter\Responders\PDFStreamingResponder;
 use ExpImpManagement\ExportersManagement\Responders\StreamingResponder;
@@ -73,7 +74,14 @@ class PDFExporter extends Exporter
      */
     protected function getViewToRender() : View
     {
-        return view($this->requireViewTemplateRelativePath() , ["data" => $this->DataCollection->toArray() , "keys" => $this->getViewDataKeys() ]);
+        return view(
+                        $this->requireViewTemplateRelativePath() ,
+                        [
+                            "data" => $this->DataCollection->toArray() ,
+                            "dataKeys" => $this->getViewDataKeys() ,
+                            "title" => $this->fileName 
+                        ]
+                   );
     }
     
     protected function passViewToPDFLib() : self

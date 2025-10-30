@@ -24,6 +24,12 @@ abstract class Exporter  implements JsonSerializable
 
     /**
      * @var string
+     * Document Title
+     */
+    protected string $documentTitle = "";
+
+    /**
+     * @var string
      * Without Extension
      */
     protected string $fileName = "";
@@ -61,6 +67,7 @@ abstract class Exporter  implements JsonSerializable
     public function __construct(?string $modelClass = null) 
     {
         $this->setModelClassOptinally($modelClass);
+        
     }
 
     /**
@@ -75,6 +82,12 @@ abstract class Exporter  implements JsonSerializable
         } 
         return $this->initStreamingResponder();
     }
+
+    public function getDocumentTitle() : string
+    {
+        return $this->documentTitle;
+    }
+    
     /**
      * @return $this
      * @throws Exception
@@ -149,6 +162,7 @@ abstract class Exporter  implements JsonSerializable
     {
         try {
             $this->setFileNames($documentTitle);
+ 
             $this->initExporter();
             return $this->getConvenientResponder()->respond(); 
         }catch(Exception $e)
