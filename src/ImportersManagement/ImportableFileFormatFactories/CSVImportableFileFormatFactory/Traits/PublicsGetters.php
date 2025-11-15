@@ -130,7 +130,7 @@ trait PublicsGetters
 
     public function getModelDatabaseFields() : array
     {
-        return array_keys($this->getModelHeadings());
+        return array_keys($this->getModelColumnComponents());
     }
 
     public function getModelHeadings() : array
@@ -138,7 +138,7 @@ trait PublicsGetters
         return array_map(function($component)
                 {
                     return $component->getColumnHeaderName();
-                },$this->modelColumnComponents);
+                },$this->getModelColumnComponents());
     }
     public function getModelColumnComponents() : array
     {
