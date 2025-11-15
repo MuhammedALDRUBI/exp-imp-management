@@ -30,10 +30,11 @@ abstract class CSVImportableFileFormatFactory
     protected string $fileName;
     protected  string $writerType = "Csv";
     protected array $headers = [];
-    protected array $validColumnFormatInfoCompoenents = [];
     protected int $firstRowHeight = 30;
     protected int $firstRowWidth = 180;
 
+    
+    protected array $validColumnFormatInfoCompoenents = [];
     protected array $modelColumnComponents = [];
     protected array $relationshipsColumnComponents = [];
     
@@ -43,7 +44,8 @@ abstract class CSVImportableFileFormatFactory
     { 
         $this->setFileName($fileName)->setHeaders($headers)
                                     ->setChildColumnFormatInfoCompoenents()
-                                    ->setModelColumnComponents()->setRelationshipColumnComponents()
+                                    ->setModelColumnComponents()
+                                    ->setRelationshipColumnComponents()
                                     ->setFormatDefaultCollection();
     }
  

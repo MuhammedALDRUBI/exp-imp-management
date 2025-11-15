@@ -19,6 +19,7 @@ trait PublicsGetters
         return $userDisplayValue;
     }
 
+    //here ... needs to review
     public function getModelDisplayValueReplacmentNeedingColumnFieldNames() : array
     {
         return array_map(function($component)
@@ -35,6 +36,7 @@ trait PublicsGetters
                });
     }
 
+    //needs to review .. relationship array key = databasefield .. what about userDisplayValue
     public function getRelationshipDbStoringValue(string $relationName , ?string $userDisplayValue = null) : string|array|null
     {
         if( $relationComponents = $this->getRelationshipColumnComponents()[$relationName] ?? null )
@@ -130,7 +132,7 @@ trait PublicsGetters
 
     public function getModelDatabaseFields() : array
     {
-        return array_keys($this->getModelHeadings());
+        return array_keys($this->getModelColumnComponents());
     }
 
     public function getModelHeadings() : array
@@ -138,8 +140,9 @@ trait PublicsGetters
         return array_map(function($component)
                 {
                     return $component->getColumnHeaderName();
-                },$this->modelColumnComponents);
+                },$this->getModelColumnComponents());
     }
+
     public function getModelColumnComponents() : array
     {
         return $this->modelColumnComponents;
