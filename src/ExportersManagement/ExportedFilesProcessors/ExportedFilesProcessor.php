@@ -59,7 +59,7 @@ class ExportedFilesProcessor extends TemporaryFilesProcessor
                                                   ->SaveChanges();
     }
     
-    protected function getOldDataExportersDeleterJobClass() : string
+    protected static function getOldDataExportersDeleterJobClass() : string
     {
         return Exporter::getOldDataExportersDeleterJobClass() ?? OldDataExportersDeleterJob::class;
     }
